@@ -1,0 +1,9 @@
+<!-- Bloquer les scripts exécutables -->
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$">
+    Deny from all
+</FilesMatch>
+
+<!-- Facultatif : empêcher l’accès aux fichiers invisibles (.htaccess, etc.) -->
+<FilesMatch "^\.">
+    Deny from all
+</FilesMatch>

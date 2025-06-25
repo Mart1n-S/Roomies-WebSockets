@@ -1,0 +1,65 @@
+api_platform:
+  title: "API de Roomies"
+  version: 1.0.0
+  description: |
+    <h2>Bienvenue dans l'API de Roomies</h2>
+    <p>Cette API propulse l'application <strong>Roomies</strong>, une plateforme de jeux en ligne avec chat en temps réel et système de rooms.</p>
+
+    <h3>Fonctionnalités principales</h3>
+    <ul>
+      <li>Authentification sécurisée via JWT</li>
+      <li>Création, gestion et participation à des <strong>rooms</strong></li>
+      <li>Chat global et chats privés en temps réel via WebSocket</li>
+      <li>Gestion des profils utilisateurs</li>
+      <li>Extension possible avec des jeux intégrés (morpion, etc.)</li>
+    </ul>
+
+    <h3>Identifiants pour les tests</h3>
+    <p>Pour tester l'API, utilisez les identifiants suivants :</p>
+    <p>USER</p>
+      <ul>
+        <li><strong>Email</strong>: user@user.com</li>
+        <li><strong>Mot de passe de l'utilisateur classique</strong>: password</li>
+      </ul>
+
+    <h3>Authentification via JWT</h3>
+    <p>Pour accéder aux routes sécurisées, vous devez inclure un <strong>token JWT</strong> dans l'en-tête <code>Authorization</code> :</p>
+
+    <h4>Dans l'interface Swagger (API Platform)</h4>
+    <p>Connectez-vous via l'endpoint dédié à l'authentification, récupérez le token, puis cliquez sur le bouton <strong>Authorize</strong> ci-dessous pour le coller.</p>
+
+    <h4>Dans Postman, Insomnia ou votre frontend</h4>
+    <pre>
+      Authorization: Bearer &lt;votre_token_jwt&gt;
+      Content-Type: application/json
+    </pre>
+
+    <p>Assurez-vous d'utiliser le bon <code>Content-Type</code> pour toutes les requêtes contenant un corps (POST, PATCH, etc.).</p>
+
+    <h4>Vérification de votre token JWT</h4>
+    <p>Vous pouvez consulter et vérifier le contenu de votre JWT en utilisant <a href="https://jwt.io" target="_blank">jwt.io</a>.</p>
+
+    <p><em>Remarque : Seuls les utilisateurs authentifiés peuvent accéder à leurs données personnelles, aux rooms privées et aux messages associés.</em></p>
+
+  formats:
+    jsonld: ["application/ld+json"] # Activer JSON-LD => permet de récupérer des données comme la pagination
+    json: ["application/json"] # Garder JSON simple si nécessaire
+    multipart: ["multipart/form-data"]
+  patch_formats:
+    json: ["application/merge-patch+json"]
+
+  defaults:
+    pagination_enabled: true
+    pagination_items_per_page: 10 # Nombre d'éléments par page par défaut
+    pagination_client_enabled: true # Permet au client de modifier la pagination via des paramètres
+    pagination_client_items_per_page: true # Permet au client de choisir le nombre d'éléments
+    pagination_maximum_items_per_page: 20 # Évite que l'utilisateur ne demande trop d'éléments
+    stateless: true
+    cache_headers:
+      vary: ["Content-Type", "Authorization", "Origin"]
+
+  swagger:
+    api_keys:
+      JWT:
+        name: Authorization
+        type: header
