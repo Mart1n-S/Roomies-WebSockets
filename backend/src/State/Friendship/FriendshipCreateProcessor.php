@@ -7,57 +7,28 @@ use App\Entity\Friendship;
 use App\Enum\FriendshipStatus;
 use App\Mapper\FriendshipMapper;
 use App\Repository\UserRepository;
-use ApiPlatform\Metadata\Operation;
 use App\Repository\FriendshipRepository;
-use ApiPlatform\State\ProcessorInterface;
 use App\Dto\Friendship\FriendshipReadDTO;
 use App\Dto\Friendship\FriendshipCreateDTO;
-use ApiPlatform\Doctrine\Common\State\PersistProcessor;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
-/**
- * @implements ProcessorInterface<FriendshipCreateDTO, FriendshipReadDTO>
- */
-final class FriendshipCreateProcessor implements ProcessorInterface
+final class FriendshipCreateProcessor
 {
     public function __construct(
-        #[Autowire(service: PersistProcessor::class)]
-        private ProcessorInterface $persistProcessor,
-        private UserRepository $userRepository,
-        private FriendshipRepository $friendshipRepository,
-        private TokenStorageInterface $tokenStorage,
-        private FriendshipMapper $friendshipMapper
+        private readonly UserRepository $userRepository,
+        private readonly FriendshipRepository $friendshipRepository,
+        private readonly FriendshipMapper $friendshipMapper
     ) {}
 
     /**
      * Gère la création d’une demande d’amis à partir d’un code ami.
-     * 
-     * Cas traités :
-     * - Le code n'existe pas
-     * - Le code est le sien
-     * - Déjà amis
-     * - Demande déjà envoyée ou reçue
      *
-     * @param FriendshipCreateDTO $data Données du formulaire (code ami)
-     * @param Operation $operation
-     * @param array $uriVariables
-     * @param array $context
+     * @param FriendshipCreateDTO $data
+     * @param User $user
      * @return FriendshipReadDTO
      */
-    public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): FriendshipReadDTO
+    public function process(FriendshipCreateDTO $data, User $user): FriendshipReadDTO
     {
-        $token = $this->tokenStorage->getToken();
-
-        if (!$token || !is_object($token->getUser())) {
-            throw new AccessDeniedException('Authentification requise.');
-        }
-
-        /** @var User $user */
-        $user = $token->getUser();
-
         $recipient = $this->userRepository->findOneBy(['friendCode' => $data->friendCode]);
 
         if (!$recipient) {
@@ -87,9 +58,7 @@ final class FriendshipCreateProcessor implements ProcessorInterface
         $friendship->setRecipient($recipient);
         $friendship->setStatus(FriendshipStatus::Pending);
 
-
-        // Persistance
-        $this->persistProcessor->process($friendship, $operation, $uriVariables, $context);
+        $this->friendshipRepository->save($friendship, true);
 
         return $this->friendshipMapper->toReadDto($friendship);
     }

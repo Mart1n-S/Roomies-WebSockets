@@ -1,6 +1,6 @@
 <?php
 
-namespace App\ApiResource;
+namespace App\ApiResource\Group;
 
 use App\Entity\Room;
 use ApiPlatform\Metadata\Post;

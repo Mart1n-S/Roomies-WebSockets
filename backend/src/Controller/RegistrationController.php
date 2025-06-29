@@ -7,6 +7,7 @@ use App\Repository\UserRepository;
 use Symfony\Component\Mime\Address;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use App\EventListener\UserRegistrationListener;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,7 +19,7 @@ use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 // TODO: Penser à ajuster la route dans services.yaml pour que le lien envoyer par mail soit correct (actuellement on envoie un lien qui pointe directement sur la route de vérification de l'email)
 class RegistrationController extends AbstractController
 {
-    public function __construct(private EmailVerifier $emailVerifier, private UserRepository $userRepository, private UserRegistrationListener $userRegistrationListener, private RateLimiterFactory $rateLimiterFactory) {}
+    public function __construct(private EmailVerifier $emailVerifier, private UserRepository $userRepository, private UserRegistrationListener $userRegistrationListener, private RateLimiterFactory $rateLimiterFactory,  private readonly string $publicKeyPath, private string $privateKey) {}
 
     /**
      * TODO: Il faut que le lien envoyé par mail pointe sur la route du frontend 
@@ -113,5 +114,53 @@ class RegistrationController extends AbstractController
         }
 
         return new JsonResponse(['message' => 'Si un compte existe, un nouvel email de confirmation sera envoyé.'], 200);
+    }
+    // TODO: a supprimer utiliser pour des test
+    #[Route('/testWS', name: 'ws-test')]
+    public function testWebSocket(): Response
+    {
+        $token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3NTExOTQ1MzcsImV4cCI6MTc1MTE5ODEzNywiaWQiOiIxMjMiLCJ1c2VybmFtZSI6InVzZXJAZXhhbXBsZS5jb20iLCJyb2xlcyI6WyJST0xFX1VTRVIiXX0.VV5gHY1rqVvozzSWIZgo7QD5NEFU6rUj1e_m3R6-cHLN_jhs6kvmFAnXoKs26Lj8qTEqp8Z__8dJa59pOnIAcqrikq2m-G7xhOWolQ1GWH9m_976qfOkoG9L87BeyPHnW5qQaCKAOyqMRv9mLzo8y82Xpqhl3r-kg6xCUhcRH06ELuGnp2eLyNy25Yq4H3Tf0hKbyKAP1MxzENSh0pyYbj24C-BbfAbThBmtjyWc-Qd4MZqstQbiYjVlXpcifdRLGqG4NZH9hlSHi6nthn0Rfiimcn7o8fsgboiZyiroKQhAHXNjlfEBihlNgAyg6ThLlAtW3uqb6XBoVvfw2LgX-A";
+
+        try {
+            $publicKey = file_get_contents($this->publicKeyPath);
+
+            if (!$publicKey) {
+                return new Response('❌ Erreur : Clé publique non lue ou vide !', 500);
+            }
+
+            if (!str_contains($publicKey, 'BEGIN PUBLIC KEY')) {
+                return new Response('❌ Erreur : Fichier n’est pas une clé publique RSA valide !', 500);
+            }
+
+            $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($publicKey, 'RS256'));
+
+            return new Response('<pre>' . print_r($decoded, true) . '</pre>');
+        } catch (\Throwable $e) {
+            return new Response('❌ Erreur : ' . $e->getMessage(), 400);
+        }
+    }
+
+    #[Route('/g', name: 'ws-tesgt')]
+    public function g()
+    {
+        $privateKey = file_get_contents($this->privateKey);
+        $privateKeyResource = openssl_get_privatekey($privateKey);
+
+        if ($privateKeyResource === false) {
+            throw new \RuntimeException('Clé privée invalide ou erreur d\'initialisation OpenSSL');
+        }
+
+
+        $payload = [
+            'iat' => time(),
+            'exp' => time() + 3600,
+            'id' => '123',
+            'username' => 'user@example.com',
+            'roles' => ['ROLE_USER'],
+        ];
+
+        $jwt = \Firebase\JWT\JWT::encode($payload, $privateKeyResource, 'RS256');
+
+        echo $jwt;
     }
 }

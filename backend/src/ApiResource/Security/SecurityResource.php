@@ -2,11 +2,14 @@
 
 namespace App\ApiResource\Security;
 
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use ApiPlatform\Metadata\ApiResource;
 use App\Controller\SecurityController;
+use App\Dto\Websocket\WebSocketTokenRead;
 use App\Controller\RegistrationController;
+use App\State\WebSocket\WebSocketTokenProvider;
 
 
 #[ApiResource(
@@ -326,7 +329,48 @@ use App\Controller\RegistrationController;
                     ]
                 ]
             )
-        )
+        ),
+        new Get(
+            uriTemplate: '/ws/token',
+            name: 'get_websocket_token',
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            output: WebSocketTokenRead::class,
+            provider: WebSocketTokenProvider::class,
+            openapi: new Model\Operation(
+                summary: 'Obtenir un token WebSocket temporaire',
+                description: 'Retourne un JWT de courte durée (2 minutes) pour établir une connexion WebSocket sécurisée. Le JWT est signé côté serveur et contient l\'ID et l\'identifiant de l\'utilisateur.',
+                tags: ['WebSocket'],
+                responses: [
+                    '200' => [
+                        'description' => 'JWT temporaire pour WebSocket',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'token' => ['type' => 'string', 'example' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'],
+                                        'expires_at' => ['type' => 'integer', 'example' => 1744055273]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    '401' => [
+                        'description' => 'Non authentifié',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'error' => ['type' => 'string', 'example' => 'Unauthorized']
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            )
+        ),
 
     ]
 )]

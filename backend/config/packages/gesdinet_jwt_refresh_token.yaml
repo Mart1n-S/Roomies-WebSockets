@@ -3,3 +3,13 @@ gesdinet_jwt_refresh_token:
   single_use: true
   # Le refresh token est valide 3 jours (259200 secondes)
   ttl: 259200
+
+  cookie:
+    enabled: true
+    http_only: true
+    secure: true
+    same_site: strict
+    path: /
+    domain: null
+    partitioned: false
+    remove_token_from_body: true

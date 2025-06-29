@@ -107,15 +107,15 @@ TODO:
 - Mettre en place la route pour quitter une room (groupe) pour un utilisateur
 
 
+TODO: 
+Mettre au propre le Websocket tester un echange de message basculer ce qui est en api platform en version websockets
 
 
 
 
 
-
-
-
-
+Finir l'authentification JWT en websocket cote back modifier le front et tester 
+Comprendre le delire des cookies car en websocket pas accessible etc etc 
 
 
 
