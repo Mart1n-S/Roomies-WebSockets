@@ -6,16 +6,18 @@ use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use App\WebSocket\Router\MessageRouter;
 use App\Security\WebSocketAuthenticator;
+use App\WebSocket\Connection\ConnectionRegistry;
 
 
 class WebSocketServer implements MessageComponentInterface
 {
-    /** @var ConnectionInterface[] */
-    private array $connections = [];
+    // /** @var ConnectionInterface[] */
+    // private array $connections = [];
 
     public function __construct(
         private readonly MessageRouter $router,
-        private readonly WebSocketAuthenticator $authenticator
+        private readonly WebSocketAuthenticator $authenticator,
+        private readonly ConnectionRegistry $registry
     ) {}
 
     public function onOpen(ConnectionInterface $conn): void
@@ -25,11 +27,13 @@ class WebSocketServer implements MessageComponentInterface
 
     public function onMessage(ConnectionInterface $from, $msg): void
     {
-        // Ne pas faire de json_decode ici
         $data = json_decode($msg, true);
 
         if (!is_array($data) || !isset($data['type'])) {
-            $from->send(json_encode(['type' => 'error', 'message' => 'Format de message invalide.']));
+            $from->send(json_encode([
+                'type' => 'error',
+                'message' => 'Format de message invalide.'
+            ]));
             return;
         }
 
@@ -37,7 +41,10 @@ class WebSocketServer implements MessageComponentInterface
             $token = $data['token'] ?? null;
 
             if (!$token) {
-                $from->send(json_encode(['type' => 'error', 'message' => 'Token manquant.']));
+                $from->send(json_encode([
+                    'type' => 'error',
+                    'message' => 'Token manquant.'
+                ]));
                 $from->close();
                 return;
             }
@@ -51,12 +58,19 @@ class WebSocketServer implements MessageComponentInterface
                 }
 
                 $from->user = $user;
-                $this->connections[$user->getId()->toBinary()] = $from;
+                $this->registry->register($user->getId(), $from);
 
-                $from->send(json_encode(['type' => 'authenticated', 'message' => 'Connexion sécurisée.']));
-                echo "✅ Utilisateur authentifié via message : {$user->getEmail()} (ID: {$user->getId()->toBinary()})\n";
+                $from->send(json_encode([
+                    'type' => 'authenticated',
+                    'message' => 'Connexion sécurisée.'
+                ]));
+
+                echo "✅ Utilisateur authentifié via message : {$user->getEmail()} (ID: {$user->getId()})\n";
             } catch (\Throwable $e) {
-                $from->send(json_encode(['type' => 'error', 'message' => 'Token invalide ou expiré.']));
+                $from->send(json_encode([
+                    'type' => 'error',
+                    'message' => 'Token invalide ou expiré.'
+                ]));
                 echo "❌ Erreur d'auth WebSocket : " . $e->getMessage() . "\n";
                 $from->close();
             }
@@ -65,19 +79,21 @@ class WebSocketServer implements MessageComponentInterface
         }
 
         if (!isset($from->user)) {
-            $from->send(json_encode(['type' => 'error', 'message' => 'Non authentifié.']));
+            $from->send(json_encode([
+                'type' => 'error',
+                'message' => 'Non authentifié.'
+            ]));
             return;
         }
 
-        // 👉 Ici on passe directement la string JSON au routeur
+        // ✅ Route le message JSON au handler approprié
         $this->router->handle($from, $msg);
     }
-
 
     public function onClose(ConnectionInterface $conn): void
     {
         if (isset($conn->user)) {
-            unset($this->connections[$conn->user->getId()]);
+            $this->registry->unregister($conn->user->getId());
             echo "🔴 Déconnexion de l'utilisateur ID {$conn->user->getId()}\n";
         } else {
             echo "🔌 Déconnexion d'un client non authentifié\n";
@@ -89,12 +105,8 @@ class WebSocketServer implements MessageComponentInterface
         echo "❌ Erreur WebSocket : " . $e->getMessage() . "\n";
         $conn->close();
     }
-
-    public function getConnectionForUserId(int $userId): ?ConnectionInterface
-    {
-        return $this->connections[$userId] ?? null;
-    }
 }
+
 
 
 

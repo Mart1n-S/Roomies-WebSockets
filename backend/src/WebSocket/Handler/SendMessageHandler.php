@@ -5,14 +5,15 @@ namespace App\WebSocket\Handler;
 use App\Entity\User;
 use Ratchet\ConnectionInterface;
 use App\Repository\UserRepository;
-use App\WebSocket\WebSocketServer;
+use App\WebSocket\Connection\ConnectionRegistry;
 use App\WebSocket\Contract\WebSocketHandlerInterface;
-// TODO: PHASE de TEST
+use Symfony\Component\Security\Core\User\UserInterface;
+
 class SendMessageHandler implements WebSocketHandlerInterface
 {
     public function __construct(
         private readonly UserRepository $userRepository,
-        private readonly WebSocketServer $webSocketServer
+        private readonly ConnectionRegistry $registry
     ) {}
 
     public function supports(string $type): bool
@@ -22,53 +23,45 @@ class SendMessageHandler implements WebSocketHandlerInterface
 
     public function handle(ConnectionInterface $conn, array $message): void
     {
-        $payload = $message['payload'] ?? [];
+        try {
+            if (!isset($conn->user) || !$conn->user instanceof UserInterface) {
+                throw new \RuntimeException('Utilisateur non authentifié.');
+            }
 
-        $friendCode = $payload['friendCode'] ?? null;
-        $content = $payload['content'] ?? null;
+            $payload = $message['payload'] ?? null;
+            if (!$payload || !isset($payload['friendCode'], $payload['content'])) {
+                throw new \InvalidArgumentException('Le friendCode et le contenu du message sont requis.');
+            }
 
-        if (!$friendCode || !$content) {
+            /** @var User $receiver */
+            $receiver = $this->userRepository->findOneBy(['friendCode' => $payload['friendCode']]);
+
+            if (!$receiver) {
+                throw new \RuntimeException("Destinataire introuvable.");
+            }
+
+            $receiverConn = $this->registry->getConnection($receiver->getId());
+
+            /** @var User $user */
+            $user = $conn->user;
+
+            if ($receiverConn) {
+                $receiverConn->send(json_encode([
+                    'type' => 'message_received',
+                    'from' => $user->getFriendCode(),
+                    'content' => $payload['content']
+                ]));
+            }
+
+            $conn->send(json_encode([
+                'type' => 'message_sent',
+                'message' => 'Message envoyé avec succès.'
+            ]));
+        } catch (\Throwable $e) {
             $conn->send(json_encode([
                 'type' => 'send_message_error',
-                'message' => 'Code ami et message requis.'
-            ]));
-            return;
-        }
-
-        if (!isset($conn->user) || !$conn->user instanceof User) {
-            $conn->send(json_encode([
-                'type' => 'send_message_error',
-                'message' => 'Utilisateur non authentifié.'
-            ]));
-            return;
-        }
-
-        $recipient = $this->userRepository->findOneBy(['friendCode' => $friendCode]);
-
-        if (!$recipient) {
-            $conn->send(json_encode([
-                'type' => 'send_message_error',
-                'message' => 'Aucun utilisateur avec ce code ami.'
-            ]));
-            return;
-        }
-
-        $recipientConn = $this->webSocketServer->getConnectionForUserId($recipient->getId());
-
-        if ($recipientConn) {
-            $recipientConn->send(json_encode([
-                'type' => 'incoming_message',
-                'from' => [
-                    'id' => $conn->user->getId(),
-                    'pseudo' => $conn->user->getPseudo(),
-                ],
-                'content' => $content,
+                'message' => $e->getMessage()
             ]));
         }
-
-        $conn->send(json_encode([
-            'type' => 'send_message_success',
-            'message' => 'Message envoyé à ' . $recipient->getPseudo()
-        ]));
     }
 }

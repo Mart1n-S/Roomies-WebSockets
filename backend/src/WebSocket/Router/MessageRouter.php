@@ -13,6 +13,10 @@ class MessageRouter
     public function __construct(iterable $handlers)
     {
         $this->handlers = iterator_to_array($handlers);
+        echo "🔎 Handlers enregistrés :\n";
+        foreach ($this->handlers as $handler) {
+            echo " - " . get_class($handler) . "\n";
+        }
     }
 
     /**

@@ -81,9 +81,16 @@ class WebSocketAuthenticator
 
             $decoded = JWT::decode($token, new Key($publicKey, 'RS256'));
 
+            $payload = (array) $decoded;
+
             $this->logger->debug('✅ JWT décodé avec succès', [
                 'payload' => (array) $decoded
             ]);
+
+            if (!isset($payload['purpose']) || $payload['purpose'] !== 'websocket') {
+                $this->logger->warning('⚠️ Token non prévu pour WebSocket (purpose absent ou invalide)');
+                return null;
+            }
 
             $userId = isset($decoded->id) ? (string) $decoded->id : null;
 

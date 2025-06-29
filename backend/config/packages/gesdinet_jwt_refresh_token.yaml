@@ -8,7 +8,7 @@ gesdinet_jwt_refresh_token:
     enabled: true
     http_only: true
     secure: true
-    same_site: strict
+    same_site: none
     path: /
     domain: null
     partitioned: false

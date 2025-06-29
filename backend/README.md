@@ -269,3 +269,49 @@ Route : GET /groups
 Règles :
 
 Retourne la liste des groupes dont l’utilisateur est membre.
+
+
+
+
+
+
+# Instructions pour lancer le projet
+
+1. **Lancer WAMP :**
+   - Ouvrez l'application WAMP sur votre ordinateur.
+   - Assurez-vous que tous les services (Apache, MySQL) sont démarrés.
+
+2. **Ouvrir la console Symfony :**
+   - Ouvrez votre terminal ou invite de commandes.
+   - Naviguez jusqu'au répertoire de votre projet Symfony.
+
+3. **Exécuter les commandes Doctrine :**
+   - Créez la base de données avec la commande suivante :
+     ```bash
+     symfony console d:d:c
+     ```
+   - Effectuez les migrations de la base de données :
+     ```bash
+     symfony console d:m:m
+     ```
+   - Chargez les fixtures :
+     ```bash
+     symfony console d:f:l
+     ```
+
+4. **Démarrer le serveur Symfony :**
+   - Lancez le serveur Symfony en arrière-plan avec :
+     ```bash
+     symfony serve -d
+     ```
+
+5. **Lancer le serveur WebSocket :**
+   - Exécutez le serveur WebSocket avec la commande :
+     ```bash
+     php bin/ws-server.php
+     ```
+6. **Lancer le frontend:**
+   ```
+   npm run dev
+   ```
+Assurez-vous que chaque commande est exécutée dans l'ordre et que chaque étape est terminée avec succès avant de passer à la suivante.

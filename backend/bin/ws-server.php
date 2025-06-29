@@ -1,14 +1,15 @@
 #!/usr/bin/env php
 <?php
 
+use App\Kernel;
 use Ratchet\Http\HttpServer;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
 use App\WebSocket\WebSocketServer;
-use App\Security\WebSocketAuthenticator;
-use App\WebSocket\Router\MessageRouter;
 use Symfony\Component\Dotenv\Dotenv;
-use App\Kernel;
+use App\WebSocket\Router\MessageRouter;
+use App\Security\WebSocketAuthenticator;
+use App\WebSocket\Connection\ConnectionRegistry;
 
 require dirname(__DIR__) . '/vendor/autoload.php';
 
@@ -43,12 +44,13 @@ try {
 // Récupération des services nécessaires à WebSocketServer
 $authenticator = $container->get(WebSocketAuthenticator::class);
 $router = $container->get(MessageRouter::class);
+$registry = $container->get(ConnectionRegistry::class);
 
 
 $server = IoServer::factory(
     new HttpServer(
         new WsServer(
-            new WebSocketServer($router, $authenticator)
+            new WebSocketServer($router, $authenticator, $registry)
         )
     ),
     8080 // port WebSocket

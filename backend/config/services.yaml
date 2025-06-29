@@ -80,6 +80,14 @@ services:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"
 
+  App\WebSocket\Connection\ConnectionRegistry:
+    public: true
+    autowire: true
+
+  # App\WebSocket\WebSocketServer:
+  #   public: true
+  #   autowire: true
+
   App\Security\WebSocketAuthenticator:
     public: true
     arguments:
@@ -96,11 +104,7 @@ services:
     arguments:
       $handlers: !tagged_iterator app.websocket_handler
 
-  # TODO: a supprimer car pas encore reussi a faire marche
   # App\WebSocket\Handler\SendMessageHandler:
-  #   arguments:
-  #     $userRepository: '@App\Repository\UserRepository'
-  #     $webSocketServer: '@App\WebSocket\WebSocketServer'
   #   tags: ["app.websocket_handler"]
-  # add more service definitions when explicit configuration is needed
-  # please note that last definitions always *replace* previous ones
+  #   autowire: true
+  #   autoconfigure: false
