@@ -101,7 +101,7 @@ TODO:
 - Mettre en place le get de toutes les rooms aux quelles l'utilisateur appartient
 - Mettre en place la route pour ajouter un utilisateur à une room => ok
 - Mettre en place la route pour supprimer un utilisateur d'une room
-- Mettre en place la route pour modifier le nom d'une room
+- Mettre en place la route pour modifier le nom d'une room => optionnel 
 - Mettre en place la route pour modifier le role d'un utilisateur dans une room => ok
 - Mettre en place la route pour supprimer une room (goupe) pour le owner
 - Mettre en place la route pour quitter une room (groupe) pour un utilisateur
