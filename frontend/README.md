@@ -59,3 +59,18 @@ npm run test:e2e
 ```sh
 npm run lint
 ```
+
+
+
+
+TODO: Finaliser l'authentification
+- Ajouter le register => ok
+- ajouter le mot de passe oublié
+- Ajouter la validation de l'email ?
+- Ajouter l'ouverture de la websocket a la connexion
+- Ajouter la connexion si cookies ou jwt valide + ouverture de la websocket
+- Cote front rendre coherent validite duree cookies et validite duree jwt et refresh token
+- Si cookies ou jwt expiré envoyer le refresh token
+- Ajouter la gestion de la déconnexion
+
+- creer le dashboard

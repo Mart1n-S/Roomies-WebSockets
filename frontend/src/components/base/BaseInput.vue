@@ -2,10 +2,12 @@
     <div class="relative flex flex-col gap-1">
         <label v-if="label" :for="name" class="text-sm text-gray-300">{{ label }}</label>
 
-        <div class="relative">
-            <input :id="name" :name="name" :type="type" :placeholder="placeholder" :disabled="disabled"
-                :value="modelValue" @input="onInput" :class="[
-                    'w-full px-4 py-2 rounded bg-roomies-gray3 text-white border border-roomies-gray1 focus:outline-none focus:ring-2 focus:ring-roomies-blue',
+        <div class="relative transition group">
+            <input v-bind="$attrs" :id="name" :name="name" :type="type" :placeholder="placeholder" :disabled="disabled"
+                :value="modelValue" @input="onInput" @blur="$emit('blur')" :class="[
+                    'w-full px-4 py-2 rounded bg-roomies-gray3 text-white border border-roomies-gray1',
+                    'focus:outline-none focus:ring-2 focus:ring-roomies-blue',
+                    'group-hover:border-roomies-blue group-hover:bg-roomies-gray2 transition',
                     $slots['right-icon'] ? 'pr-10' : '',
                     props.class
                 ]" />
@@ -22,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ inheritAttrs: false })
 /**
  * defineProps : permet au composant de recevoir des données
  * defineEmits : permet au composant de renvoyer des actions au parent
@@ -40,10 +43,10 @@ const props = defineProps<{
     class?: string            // Classe CSS personnalisée (optionnelle)
 }>()
 
-// On déclare les événements que ce composant peut émettre
 const emit = defineEmits([
-    'update:modelValue',      // Pour mettre à jour la valeur liée via v-model
-    'icon-click'              // Pour signaler que l’icône à droite a été cliquée
+    'update:modelValue',  // Mise à jour du v-model
+    'icon-click',         // Clic sur l’icône
+    'blur'                // Événement focusout pour déclencher la validation côté parent
 ])
 
 // Fonction appelée à chaque saisie dans l'input

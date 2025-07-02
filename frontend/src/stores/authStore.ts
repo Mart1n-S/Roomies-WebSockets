@@ -33,9 +33,9 @@ export const useAuthStore = defineStore('auth', {
             try {
                 this.loading = true
                 await register(formData)
-                this.user = await getCurrentUser()
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'Erreur lors de l\'inscription.'
+                throw err
             } finally {
                 this.loading = false
             }
@@ -62,6 +62,14 @@ export const useAuthStore = defineStore('auth', {
         logout() {
             this.user = null
             // TODO: A créer => endpoint /logout, et faire un appel ici
+        },
+
+        /**
+         * Réinitialise l'erreur.
+         * Utile pour nettoyer l'état avant de soumettre un formulaire.
+         */
+        resetError() {
+            this.error = ''
         }
     }
 })

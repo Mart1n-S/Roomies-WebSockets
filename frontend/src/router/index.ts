@@ -3,6 +3,15 @@ import { useAuthStore } from '@/stores/authStore'
 // Déclaration des routes
 const routes = [
   {
+    path: '/register',
+    name: 'register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: {
+      requiresGuest: true,
+      title: 'Inscription - Roomies'
+    }
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
