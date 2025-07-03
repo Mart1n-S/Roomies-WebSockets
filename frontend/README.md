@@ -65,8 +65,10 @@ npm run lint
 
 TODO: Finaliser l'authentification
 - Ajouter le register => ok
-- ajouter le mot de passe oublié
+- ajouter le mot de passe oublié => OK
+- Voir pour mettre dans les toasts les message reussu par le bacjkend s'il y a sinon mettre un personalisé
 - Ajouter la validation de l'email ?
+- ajouter la demande de nouvelle envoie de confirmation d'email
 - Ajouter l'ouverture de la websocket a la connexion
 - Ajouter la connexion si cookies ou jwt valide + ouverture de la websocket
 - Cote front rendre coherent validite duree cookies et validite duree jwt et refresh token
@@ -74,3 +76,5 @@ TODO: Finaliser l'authentification
 - Ajouter la gestion de la déconnexion
 
 - creer le dashboard
+- voir google doc pour la suite
+- ajouter test a la fin

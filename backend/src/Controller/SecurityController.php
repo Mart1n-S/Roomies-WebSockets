@@ -68,7 +68,7 @@ final class SecurityController extends AbstractController
 
         // Récupérer l'URL du frontend via services.yaml
         $frontendUrl = $this->getParameter('frontend_url');
-        $resetUrl = sprintf('%s/newPword?token=%s', $frontendUrl, urlencode($token));
+        $resetUrl = sprintf('%s/reset-password?token=%s', $frontendUrl, urlencode($token));
 
         $expiresAt = $passwordResetToken->getExpiresAt();
         $now = new \DateTime();
