@@ -63,4 +63,13 @@ export async function resetPassword(
     return response.data
 }
 
+/**
+ * Demande un nouvel email de confirmation si l’utilisateur n’a pas encore validé son compte.
+ * @param email Adresse email
+ */
+export async function requestNewConfirmationEmail(email: string) {
+    const response = await axios.post('/request-new-confirmation-email', { email })
+    return response.data
+}
+
 

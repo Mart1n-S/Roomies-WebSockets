@@ -30,6 +30,14 @@
                 S'inscrire
             </RouterLink>
         </p>
+
+        <p class="text-sm text-center text-white">
+            Pas reçu l’email de confirmation ?
+            <RouterLink to="/resend-confirmation-email"
+                class="font-medium text-white underline hover:text-roomies-blue">
+                Renvoyer l’email
+            </RouterLink>
+        </p>
     </form>
 </template>
 
@@ -51,8 +59,9 @@ const auth = useAuthStore()
 const toast = useToast()
 const router = useRouter()
 
+auth.resetError()
+
 async function handleLogin() {
-    auth.resetError()
     loading.value = true
 
     await auth.login(email.value, password.value)

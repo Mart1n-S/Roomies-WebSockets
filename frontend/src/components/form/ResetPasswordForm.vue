@@ -41,11 +41,11 @@ const token = ref('')
 const passwordRef = ref<InstanceType<typeof PasswordInput> | null>(null)
 
 onMounted(() => {
+    auth.resetError()
     token.value = route.query.token as string || ''
 })
 
 async function handleSubmit() {
-    auth.resetError()
     emailError.value = ''
 
     if (!isPasswordValid.value || !passwordRef.value) {

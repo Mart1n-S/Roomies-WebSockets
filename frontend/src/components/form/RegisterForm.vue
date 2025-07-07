@@ -68,7 +68,7 @@ const isPseudoValid = ref(false)
 const isAvatarValid = ref(true)
 const isPasswordValid = ref(false)
 
-
+auth.resetError()
 async function handleRegister() {
     emailError.value = ''
     pseudoError.value = ''

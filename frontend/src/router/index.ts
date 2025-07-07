@@ -12,6 +12,23 @@ const routes = [
     }
   },
   {
+    path: '/verified-email',
+    name: 'verified-email',
+    component: () => import('@/views/VerifiedEmailView.vue'),
+    meta: {
+      title: 'Vérification email - Roomies'
+    }
+  },
+  {
+    path: '/resend-confirmation-email',
+    name: 'resend-confirmation-email',
+    component: () => import('@/views/ResendConfirmationEmailView.vue'),
+    meta: {
+      requiresGuest: true,
+      title: 'Renvoyer l’email de confirmation - Roomies'
+    }
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),

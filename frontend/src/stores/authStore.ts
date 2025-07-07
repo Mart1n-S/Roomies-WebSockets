@@ -1,6 +1,6 @@
 // src/stores/authStore.ts
 import { defineStore } from 'pinia'
-import { login, register, getCurrentUser, requestPasswordReset, resetPassword } from '@/services/authService'
+import { login, register, getCurrentUser, requestPasswordReset, resetPassword, requestNewConfirmationEmail } from '@/services/authService'
 import type { User } from '@/models/User'
 
 
@@ -13,7 +13,13 @@ export const useAuthStore = defineStore('auth', {
     }),
 
     actions: {
+        /**
+         * Connecte l'utilisateur avec email et mot de passe.
+         * @param email Email de l'utilisateur
+         * @param password Mot de passe de l'utilisateur
+         */
         async login(email: string, password: string) {
+            this.resetError()
             try {
                 this.loading = true
                 await login(email, password)
@@ -60,6 +66,7 @@ export const useAuthStore = defineStore('auth', {
         /**
          * Demande un lien de réinitialisation de mot de passe.
          * @param email L’adresse email saisie
+         * @returns Promise<any>
          */
         async requestPasswordReset(email: string) {
             this.resetError()
@@ -80,6 +87,7 @@ export const useAuthStore = defineStore('auth', {
          * @param token Token reçu par email
          * @param password Nouveau mot de passe
          * @param confirmPassword Confirmation
+         * @returns Promise<any>
          */
         async resetPassword(email: string, token: string, password: string, confirmPassword: string) {
             this.resetError()
@@ -94,6 +102,23 @@ export const useAuthStore = defineStore('auth', {
             }
         },
 
+        /**
+         * Demande un nouvel email de confirmation.
+         * @param email Email de l’utilisateur
+         * @returns Promise<any>
+         */
+        async requestNewConfirmationEmail(email: string) {
+            this.resetError()
+            try {
+                this.loading = true
+                return await requestNewConfirmationEmail(email)
+            } catch (err: any) {
+                this.error = err.response?.data?.error || 'Erreur lors de l’envoi de l’email.'
+                throw err
+            } finally {
+                this.loading = false
+            }
+        },
 
         /**
          * Déconnecte l'utilisateur.

@@ -28,6 +28,8 @@ const auth = useAuthStore()
 const toast = useToast()
 const router = useRouter()
 
+auth.resetError()
+
 async function handleSubmit() {
     try {
         const response = await auth.requestPasswordReset(email.value)
