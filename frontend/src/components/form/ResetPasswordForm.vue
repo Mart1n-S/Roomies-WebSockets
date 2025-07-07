@@ -57,8 +57,8 @@ async function handleSubmit() {
 
     try {
         loading.value = true
-        await auth.resetPassword(email.value, token.value, password.value, confirmPassword)
-        toast.success('Mot de passe réinitialisé avec succès.')
+        const response = await auth.resetPassword(email.value, token.value, password.value, confirmPassword)
+        toast.success(response.message || 'Mot de passe réinitialisé avec succès.')
         router.push('/login')
     } catch {
         toast.error(auth.error)

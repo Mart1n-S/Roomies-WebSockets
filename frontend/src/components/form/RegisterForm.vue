@@ -89,7 +89,7 @@ async function handleRegister() {
     try {
 
         await auth.registerUser(formData)
-        toast.success('🎉 Votre compte a été créé ! Vérifiez vos emails pour confirmer votre inscription.')
+        toast.success('Votre compte a été créé ! Vérifiez vos emails pour confirmer votre inscription.')
         router.push('/login')
     } catch (err: any) {
         const violations = err.response?.data?.violations
@@ -111,7 +111,7 @@ async function handleRegister() {
                 }
             }
         } else {
-            toast.error(auth.error)
+            toast.error(auth.error || 'Une erreur est survenue.')
         }
     }
 }

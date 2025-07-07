@@ -62,7 +62,7 @@ async function handleLogin() {
     if (auth.user) {
         router.push('/dashboard')
     } else if (auth.error) {
-        toast.error(auth.error)
+        toast.error(auth.error || 'Une erreur est survenue.')
     }
 }
 </script>

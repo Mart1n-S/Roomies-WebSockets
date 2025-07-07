@@ -30,11 +30,11 @@ const router = useRouter()
 
 async function handleSubmit() {
     try {
-        await auth.requestPasswordReset(email.value)
-        toast.success('📩 Si un compte existe, un email de réinitialisation a été envoyé.')
+        const response = await auth.requestPasswordReset(email.value)
+        toast.success(`${response.message}`)
         router.push('/login')
     } catch {
-        toast.error(auth.error)
+        toast.error(auth.error || 'Une erreur est survenue.')
     }
 }
 </script>

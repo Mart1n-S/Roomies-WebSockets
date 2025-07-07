@@ -65,7 +65,7 @@ export const useAuthStore = defineStore('auth', {
             this.resetError()
             try {
                 this.loading = true
-                await requestPasswordReset(email)
+                return await requestPasswordReset(email)
             } catch (err: any) {
                 this.error = err.response?.data?.error || 'Erreur lors de la demande de réinitialisation.'
                 throw err
@@ -85,7 +85,7 @@ export const useAuthStore = defineStore('auth', {
             this.resetError()
             try {
                 this.loading = true
-                await resetPassword(email, token, password, confirmPassword)
+                return await resetPassword(email, token, password, confirmPassword)
             } catch (err: any) {
                 this.error = err.response?.data?.error || 'Erreur lors de la réinitialisation du mot de passe.'
                 throw err
