@@ -2,11 +2,14 @@
 
 namespace App\ApiResource\Security;
 
+use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use ApiPlatform\Metadata\ApiResource;
 use App\Controller\SecurityController;
+use App\Dto\Websocket\WebSocketTokenRead;
 use App\Controller\RegistrationController;
+use App\State\WebSocket\WebSocketTokenProvider;
 
 
 #[ApiResource(
@@ -16,26 +19,13 @@ use App\Controller\RegistrationController;
             uriTemplate: '/token/refresh',
             name: 'refreshToken',
             security: "is_granted('PUBLIC_ACCESS')",
-            description: 'Rafraîchir le token utilisateur avec un refresh token',
+            description: 'Rafraîchir le token utilisateur à partir du cookie sécurisé contenant le refresh token.',
             openapi: new Model\Operation(
                 tags: ['Refresh_Token'],
-                summary: 'Rafraîchissement du token utilisateur avec un refresh token',
-                requestBody: new Model\RequestBody(
-                    content: new \ArrayObject([
-                        'application/json' => new Model\MediaType(
-                            schema: new \ArrayObject([
-                                'type' => 'object',
-                                'properties' => [
-                                    'refresh_token' => ['type' => 'string', 'example' => 'your.refresh.token']
-                                ],
-                                'required' => ['refresh_token']
-                            ])
-                        )
-                    ])
-                ),
+                summary: 'Rafraîchissement du token utilisateur avec le refresh token en cookie sécurisé',
                 responses: [
                     '200' => [
-                        'description' => 'Le refresh token a permis de récupérer un nouveau token utilisateur',
+                        'description' => 'Un nouveau JWT a été généré grâce au refresh token.',
                         'content' => [
                             'application/json' => [
                                 'schema' => [
@@ -50,7 +40,7 @@ use App\Controller\RegistrationController;
                         ]
                     ],
                     '401' => [
-                        'description' => 'Refresh token invalide ou expiré',
+                        'description' => 'Refresh token manquant, invalide ou expiré.',
                         'content' => [
                             'application/json' => [
                                 'schema' => [
@@ -62,6 +52,24 @@ use App\Controller\RegistrationController;
                             ]
                         ]
                     ]
+                ]
+            )
+        ),
+        new Post(
+            uriTemplate: '/logout',
+            name: 'logout',
+            security: "is_granted('PUBLIC_ACCESS')",
+            openapi: new \ApiPlatform\OpenApi\Model\Operation(
+                summary: 'Déconnexion utilisateur',
+                description: 'Déconnecte l’utilisateur en supprimant le refresh token du cookie et de la base de données.',
+                tags: ['Auth'],
+                responses: [
+                    '204' => [
+                        'description' => 'Déconnexion réussie, aucun contenu retourné.',
+                    ],
+                    '401' => [
+                        'description' => 'L’utilisateur n’est pas authentifié ou le token est invalide.',
+                    ],
                 ]
             )
         ),
@@ -326,7 +334,48 @@ use App\Controller\RegistrationController;
                     ]
                 ]
             )
-        )
+        ),
+        new Get(
+            uriTemplate: '/ws/token',
+            name: 'get_websocket_token',
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            output: WebSocketTokenRead::class,
+            provider: WebSocketTokenProvider::class,
+            openapi: new Model\Operation(
+                summary: 'Obtenir un token WebSocket temporaire',
+                description: 'Retourne un JWT de courte durée (2 minutes) pour établir une connexion WebSocket sécurisée. Le JWT est signé côté serveur et contient l\'ID et l\'identifiant de l\'utilisateur.',
+                tags: ['WebSocket'],
+                responses: [
+                    '200' => [
+                        'description' => 'JWT temporaire pour WebSocket',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'token' => ['type' => 'string', 'example' => 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'],
+                                        'expires_at' => ['type' => 'integer', 'example' => 1744055273]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    '401' => [
+                        'description' => 'Non authentifié',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'error' => ['type' => 'string', 'example' => 'Unauthorized']
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            )
+        ),
 
     ]
 )]

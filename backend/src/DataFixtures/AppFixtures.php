@@ -77,8 +77,8 @@ class AppFixtures extends Fixture
         $faker = Faker::create();
         $users = [];
 
-        // 1. Créer 200 utilisateurs
-        for ($i = 0; $i < 200; $i++) {
+        // 1. Créer 10 utilisateurs
+        for ($i = 0; $i < 10; $i++) {
             $user = new User();
             $user->setPseudo($faker->userName);
             $user->setIsVerified(true);
@@ -89,6 +89,19 @@ class AppFixtures extends Fixture
             $manager->persist($user);
             $users[] = $user;
         }
+
+        // Création d'un utilisateur classique
+        $userClassique = new User();
+        $userClassique->setPseudo('userClassique');
+        $userClassique->setIsVerified(true);
+        $userClassique->setEmail('user@user.com');
+        $userClassique->setFriendCode(strtoupper(bin2hex(random_bytes(10))));
+        $userClassique->setPassword($this->passwordHasher->hashPassword(
+            $userClassique,
+            'password'
+        ));
+        $manager->persist($userClassique);
+        $users[] = $userClassique;
 
         // 2. Créer 0 à 3 amis par utilisateur
         foreach ($users as $user) {

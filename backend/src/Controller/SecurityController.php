@@ -68,7 +68,7 @@ final class SecurityController extends AbstractController
 
         // Récupérer l'URL du frontend via services.yaml
         $frontendUrl = $this->getParameter('frontend_url');
-        $resetUrl = sprintf('%s/newPword?token=%s', $frontendUrl, urlencode($token));
+        $resetUrl = sprintf('%s/reset-password?token=%s', $frontendUrl, urlencode($token));
 
         $expiresAt = $passwordResetToken->getExpiresAt();
         $now = new \DateTime();
@@ -133,7 +133,7 @@ final class SecurityController extends AbstractController
         // Vérifier si le token est valide
         $passwordResetToken = $passwordResetTokenRepository->findOneBy(['token' => $token, 'user' => $user]);
         if (!$passwordResetToken) {
-            return new JsonResponse(['error' => 'Le token n\'est pas valide. Veuillez refaire une demande de réinitialisation.'], 400);
+            return new JsonResponse(['error' => 'Le lien de réinitialisation est invalide ou expiré, ou il ne correspond à aucun utilisateur. Veuillez effectuer une nouvelle demande de réinitialisation de mot de passe.'], 400);
         }
 
         // Vérifier si le token est expiré

@@ -101,21 +101,21 @@ TODO:
 - Mettre en place le get de toutes les rooms aux quelles l'utilisateur appartient
 - Mettre en place la route pour ajouter un utilisateur à une room => ok
 - Mettre en place la route pour supprimer un utilisateur d'une room
-- Mettre en place la route pour modifier le nom d'une room
+- Mettre en place la route pour modifier le nom d'une room => optionnel 
 - Mettre en place la route pour modifier le role d'un utilisateur dans une room => ok
 - Mettre en place la route pour supprimer une room (goupe) pour le owner
 - Mettre en place la route pour quitter une room (groupe) pour un utilisateur
 
 
+TODO: 
+Mettre au propre le Websocket tester un echange de message basculer ce qui est en api platform en version websockets
 
 
 
 
 
-
-
-
-
+Finir l'authentification JWT en websocket cote back modifier le front et tester 
+Comprendre le delire des cookies car en websocket pas accessible etc etc 
 
 
 
@@ -269,3 +269,79 @@ Route : GET /groups
 Règles :
 
 Retourne la liste des groupes dont l’utilisateur est membre.
+
+
+
+
+
+
+# Instructions pour lancer le projet
+
+1. **Lancer WAMP :**
+   - Ouvrez l'application WAMP sur votre ordinateur.
+   - Assurez-vous que tous les services (Apache, MySQL) sont démarrés.
+
+2. **Ouvrir la console Symfony :**
+   - Ouvrez votre terminal ou invite de commandes.
+   - Naviguez jusqu'au répertoire de votre projet Symfony.
+
+3. **Exécuter les commandes Doctrine :**
+   - Créez la base de données avec la commande suivante :
+     ```bash
+     symfony console d:d:c
+     ```
+   - Effectuez les migrations de la base de données :
+     ```bash
+     symfony console d:m:m
+     ```
+   - Chargez les fixtures :
+     ```bash
+     symfony console d:f:l
+     ```
+
+4. **Démarrer le serveur Symfony :**
+   - Lancez le serveur Symfony en arrière-plan avec :
+     ```bash
+     symfony serve -d
+     ```
+
+5. **Lancer le serveur WebSocket :**
+   - Exécutez le serveur WebSocket avec la commande :
+     ```bash
+     php bin/ws-server.php
+     ```
+6. **Lancer le frontend:**
+   ```
+   npm run dev
+   ```
+Assurez-vous que chaque commande est exécutée dans l'ordre et que chaque étape est terminée avec succès avant de passer à la suivante.
+
+
+
+
+## 🧠 Note : Problème de cookies partagés entre utilisateurs lors des connexions (JWT + Refresh Token)
+
+### 🔍 Contexte
+En environnement de développement, j’utilise une authentification par **JWT + refresh token**, tous deux **stockés dans des cookies** (`BEARER` et `refresh_token`).
+
+### ⚠️ Problème rencontré
+Lors de tests, je me suis connecté avec **user1**, puis immédiatement avec **user2** **dans le même onglet / navigateur**. Résultat :
+- Les **cookies de user1 ont été envoyés avec la requête de login de user2**.
+- Mon listener (`AuthenticationSuccessListener`) a donc supprimé le **refresh token associé à l'email présent dans les cookies**, croyant qu’il appartenait au user en cours.
+- Cela a généré un comportement incohérent : **le refresh token de user1 a été révoqué alors que je me connectais avec user2**, ce qui m’a induit en erreur.
+
+### ✅ Leçon retenue
+Les cookies sont **partagés dans une même session navigateur** :
+- Ils sont automatiquement envoyés avec chaque requête, peu importe l’utilisateur.
+- Cela peut entraîner des effets de bord en cas de **tests multi-utilisateurs simultanés dans la même session**.
+
+### 🛡️ Solution pour mes tests
+- Utiliser **la navigation privée** pour chaque utilisateur connecté.
+- Ou bien utiliser **un navigateur distinct par utilisateur** (ex : Chrome pour user1, Firefox pour user2).
+- Ne **jamais enchaîner les connexions d'utilisateurs différents dans un même onglet sans nettoyer les cookies**.
+
+---
+
+> ✅ **Ce n’était pas un bug dans mon code.**
+> C’était un **effet logique des cookies** dans un contexte de test non isolé.
+

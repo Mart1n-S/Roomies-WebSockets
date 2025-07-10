@@ -37,6 +37,7 @@ services:
           name: "kernel.event_listener",
           event: "security.authentication.success",
           method: "onAuthenticationSuccess",
+          priority: -10,
         }
   App\EventListener\ExceptionListener:
     tags:
@@ -45,6 +46,9 @@ services:
   App\Controller\RegistrationController:
     arguments:
       $rateLimiterFactory: "@limiter.email_confirmation_limiter"
+      # TODO: a supprimer
+      $publicKeyPath: "%kernel.project_dir%/config/jwt/public.pem"
+      $privateKey: "%kernel.project_dir%/config/jwt/private.pem"
 
   App\Controller\SecurityController:
     arguments:
@@ -76,5 +80,31 @@ services:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"
 
-  # add more service definitions when explicit configuration is needed
-  # please note that last definitions always *replace* previous ones
+  App\WebSocket\Connection\ConnectionRegistry:
+    public: true
+    autowire: true
+
+  # App\WebSocket\WebSocketServer:
+  #   public: true
+  #   autowire: true
+
+  App\Security\WebSocketAuthenticator:
+    public: true
+    arguments:
+      $publicKeyPath: "%kernel.project_dir%/config/jwt/public.pem"
+
+  App\WebSocket\Handler\:
+    resource: "../src/WebSocket/Handler"
+    tags: ["app.websocket_handler"]
+    autowire: true
+    autoconfigure: false
+
+  App\WebSocket\Router\MessageRouter:
+    public: true
+    arguments:
+      $handlers: !tagged_iterator app.websocket_handler
+
+  # App\WebSocket\Handler\SendMessageHandler:
+  #   tags: ["app.websocket_handler"]
+  #   autowire: true
+  #   autoconfigure: false
