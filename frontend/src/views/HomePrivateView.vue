@@ -1,4 +1,3 @@
-<!-- src/views/HomePrivateView.vue -->
 <template>
     <div class="min-h-screen px-6 py-12 text-white bg-roomies-gray5">
         <h1 class="text-3xl font-bold">Bienvenue sur Roomies 👋</h1>

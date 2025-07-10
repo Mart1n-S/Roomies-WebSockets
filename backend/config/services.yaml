@@ -104,6 +104,10 @@ services:
     arguments:
       $handlers: !tagged_iterator app.websocket_handler
 
+  App\EventListener\LogoutResponseListener:
+    tags:
+      - { name: kernel.event_listener, event: kernel.response }
+
   # App\WebSocket\Handler\SendMessageHandler:
   #   tags: ["app.websocket_handler"]
   #   autowire: true

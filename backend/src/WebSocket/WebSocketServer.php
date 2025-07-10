@@ -11,9 +11,6 @@ use App\WebSocket\Connection\ConnectionRegistry;
 
 class WebSocketServer implements MessageComponentInterface
 {
-    // /** @var ConnectionInterface[] */
-    // private array $connections = [];
-
     public function __construct(
         private readonly MessageRouter $router,
         private readonly WebSocketAuthenticator $authenticator,
