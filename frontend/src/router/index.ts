@@ -12,12 +12,47 @@ const routes = [
     }
   },
   {
+    path: '/verified-email',
+    name: 'verified-email',
+    component: () => import('@/views/VerifiedEmailView.vue'),
+    meta: {
+      title: 'Vérification email - Roomies'
+    }
+  },
+  {
+    path: '/resend-confirmation-email',
+    name: 'resend-confirmation-email',
+    component: () => import('@/views/ResendConfirmationEmailView.vue'),
+    meta: {
+      requiresGuest: true,
+      title: 'Renvoyer l’email de confirmation - Roomies'
+    }
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('@/views/LoginView.vue'),
     meta: {
       requiresGuest: true,
       title: 'Connexion - Roomies'
+    }
+  },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/views/ForgotPasswordView.vue'),
+    meta: {
+      requiresGuest: true,
+      title: 'Mot de passe oublié - Roomies'
+    }
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/views/ResetPasswordView.vue'),
+    meta: {
+      requiresGuest: true,
+      title: 'Réinitialiser le mot de passe - Roomies'
     }
   },
   {
