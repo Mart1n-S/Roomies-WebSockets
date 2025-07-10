@@ -69,10 +69,13 @@ TODO: Finaliser l'authentification
 - Voir pour mettre dans les toasts les message reussu par le bacjkend s'il y a sinon mettre un personalisé =>ok
 - Ajouter la validation de l'email => ok
 - ajouter la demande de nouvelle envoie de confirmation d'email => ok 
+- Cote front rendre coherent validite duree cookies et validite duree jwt et refresh token =>ok
+- Mettre à jour le refresh token et le fixe => ok rien a faire car des quil est invalide il est delete
+- Si cookies ou jwt expiré envoyer le refresh token => Ok 
+
+
 - Ajouter l'ouverture de la websocket a la connexion
-- Ajouter la connexion si cookies ou jwt valide + ouverture de la websocket
-- Cote front rendre coherent validite duree cookies et validite duree jwt et refresh token
-- Si cookies ou jwt expiré envoyer le refresh token
+- Ajouter la connexion si cookies ou jwt valide => ok --> a faire :  ouverture de la websocket
 - Ajouter la gestion de la déconnexion
 
 - creer le dashboard

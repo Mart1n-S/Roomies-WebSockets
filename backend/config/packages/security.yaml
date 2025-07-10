@@ -35,12 +35,15 @@ security:
       jwt: ~ # Utilisation du JWT comme méthode d'authentification
       refresh_jwt:
         check_path: /api/token/refresh
+      logout:
+        path: /api/logout
+        delete_cookies: ["refresh_token", "BEARER"]
 
   # Remarque : Seul le *premier* contrôle d'accès qui correspondra sera utilisé
   access_control:
     # <----- Accès public (sans authentification) -----> #
     - {
-        path: ^/api/(login|token/refresh),
+        path: ^/api/(login|token/refresh|logout),
         roles: PUBLIC_ACCESS,
         methods: [POST],
       } # Login et rafraîchissement du token

@@ -72,4 +72,9 @@ export async function requestNewConfirmationEmail(email: string) {
     return response.data
 }
 
-
+/**
+ * Déconnecte l'utilisateur côté backend (supprime le cookie + token DB).
+ */
+export async function logout() {
+    await axios.post('/logout')
+}

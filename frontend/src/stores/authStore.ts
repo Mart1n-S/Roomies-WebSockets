@@ -1,7 +1,8 @@
 // src/stores/authStore.ts
 import { defineStore } from 'pinia'
-import { login, register, getCurrentUser, requestPasswordReset, resetPassword, requestNewConfirmationEmail } from '@/services/authService'
+import { login, register, getCurrentUser, requestPasswordReset, resetPassword, requestNewConfirmationEmail, logout } from '@/services/authService'
 import type { User } from '@/models/User'
+import { router } from '@/router'
 
 
 export const useAuthStore = defineStore('auth', {
@@ -123,9 +124,19 @@ export const useAuthStore = defineStore('auth', {
         /**
          * Déconnecte l'utilisateur.
          */
-        logout() {
-            this.user = null
-            // TODO: A créer => endpoint /logout, et faire un appel ici
+        async logout() {
+            try {
+                this.loading = true
+                await logout()
+            } catch (err) {
+                console.warn('Erreur lors du logout', err)
+            } finally {
+                this.user = null
+                this.userFetched = false
+                this.error = ''
+                this.loading = false
+                router.push('/login')
+            }
         },
 
         /**
@@ -134,6 +145,18 @@ export const useAuthStore = defineStore('auth', {
          */
         resetError() {
             this.error = ''
+        },
+
+        /**
+         * Réinitialise uniquement l'état local de l'authentification,
+         * sans appeler l'API de déconnexion.
+         * 
+         * On ne met pas this.userFetched = false sinon cela va créer une boucle infinie
+         */
+        resetLocalAuthState() {
+            this.user = null
+            this.error = ''
+            this.loading = false
         }
     }
 })

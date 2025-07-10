@@ -13,3 +13,4 @@ gesdinet_jwt_refresh_token:
     domain: null
     partitioned: false
     remove_token_from_body: true
+  logout_firewall: api
