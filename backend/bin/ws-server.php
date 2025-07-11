@@ -15,6 +15,7 @@ use React\Socket\SocketServer;
 use React\Socket\SecureServer;
 use React\EventLoop\Loop;
 
+// Configuration du serveur WebSocket sécurisé (wss://)
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 // Chargement manuel des variables d'environnement si non définies
@@ -68,6 +69,7 @@ $httpServer = new HttpServer(
 );
 
 $server = new IoServer($httpServer, $secureSocket, $loop);
+echo "🧠 WebSocket Server en écoute sur wss://localhost/ws/\n";
 $server->run();
 
 
@@ -75,7 +77,7 @@ $server->run();
 
 
 
-
+// Configuration du serveur WebSocket sans SSL (ws://)
 // use App\Kernel;
 // use Ratchet\Http\HttpServer;
 // use Ratchet\Server\IoServer;

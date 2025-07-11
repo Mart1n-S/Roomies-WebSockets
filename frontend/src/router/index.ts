@@ -94,10 +94,8 @@ router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
 
   // On ne fetch que si :
-  //  - la route a besoin de connaître l'utilisateur
-  //  - ET qu'on n'a pas déjà tenté de le récupérer
-  //  - ET qu'on ne l’a pas déjà dans l’état
-  if ((to.meta.requiresAuth || to.meta.requiresGuest) && !auth.user && !auth.userFetched) {
+  //  la route nécessite une authentification
+  if (to.meta.requiresAuth && !auth.user && !auth.userFetched) {
     await auth.fetchUser()
   }
 

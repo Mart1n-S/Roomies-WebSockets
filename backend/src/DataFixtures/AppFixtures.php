@@ -83,7 +83,7 @@ class AppFixtures extends Fixture
             $user->setPseudo($faker->userName);
             $user->setIsVerified(true);
             $user->setEmail($faker->unique()->safeEmail);
-            $user->setFriendCode(strtoupper(bin2hex(random_bytes(5))));
+            $user->setFriendCode(strtoupper(bin2hex(random_bytes(10))));
             $user->setPassword($this->passwordHasher->hashPassword($user, 'password'));
 
             $manager->persist($user);

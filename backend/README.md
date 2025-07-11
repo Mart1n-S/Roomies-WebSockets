@@ -117,12 +117,6 @@ Mettre au propre le Websocket tester un echange de message basculer ce qui est e
 
 
 
-Finir l'authentification JWT en websocket cote back modifier le front et tester 
-Comprendre le delire des cookies car en websocket pas accessible etc etc 
-
-
-
-
 
 
  1. Création d’un groupe

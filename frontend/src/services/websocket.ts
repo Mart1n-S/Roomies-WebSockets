@@ -21,7 +21,7 @@ export async function connectWebSocket(): Promise<WebSocket | null> {
         const token = res.data.token
         console.log('🎫 Token WebSocket récupéré :', token)
 
-        socket = new WebSocket('wss://localhost:8080')
+        socket = new WebSocket('wss://localhost/ws/')
 
         socket.onopen = () => {
             console.log('✅ WebSocket ouvert')
