@@ -9,7 +9,7 @@ use ApiPlatform\Metadata\ApiResource;
 use App\Controller\SecurityController;
 use App\Dto\Websocket\WebSocketTokenRead;
 use App\Controller\RegistrationController;
-use App\State\WebSocket\WebSocketTokenProvider;
+use App\State\WebSocket\Security\WebSocketTokenProvider;
 
 
 #[ApiResource(

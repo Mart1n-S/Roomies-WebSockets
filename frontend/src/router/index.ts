@@ -16,6 +16,7 @@ const routes = [
     name: 'verified-email',
     component: () => import('@/views/VerifiedEmailView.vue'),
     meta: {
+      requiresGuest: true,
       title: 'Vérification email - Roomies'
     }
   },
@@ -67,12 +68,18 @@ const routes = [
   },
   {
     path: '/dashboard',
-    name: 'home.private',
-    component: () => import('@/views/HomePrivateView.vue'),
-    meta: {
-      requiresAuth: true,
-      title: 'Tableau de bord - Roomies'
-    }
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'home.private',
+        component: () => import('@/views/HomePrivateView.vue'),
+        meta: {
+          title: 'Tableau de bord - Roomies'
+        }
+      }
+    ]
   },
 
 ]

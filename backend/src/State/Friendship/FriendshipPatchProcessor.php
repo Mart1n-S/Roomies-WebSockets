@@ -81,7 +81,7 @@ final class FriendshipPatchProcessor implements ProcessorInterface
             // 2. Création de la Room privée
             $this->roomFactoryService->createRoom(false, $friendship->getApplicant(), [$friendship->getRecipient()]);
 
-            return new JsonResponse($this->normalizer->normalize($this->friendshipTransformer->toReadDto($friendship), null, ['groups' => ['read:friendship']]), JsonResponse::HTTP_OK);
+            return new JsonResponse($this->normalizer->normalize($this->friendshipTransformer->toReadDto($friendship, $user), null, ['groups' => ['read:friendship']]), JsonResponse::HTTP_OK);
         }
 
         // Si refusé, on supprime l'entité

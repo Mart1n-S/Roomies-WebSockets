@@ -60,6 +60,6 @@ final class FriendshipCreateProcessor
 
         $this->friendshipRepository->save($friendship, true);
 
-        return $this->friendshipMapper->toReadDto($friendship);
+        return $this->friendshipMapper->toReadDto($friendship, $user);
     }
 }

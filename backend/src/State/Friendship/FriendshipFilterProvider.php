@@ -46,7 +46,7 @@ final class FriendshipFilterProvider implements ProviderInterface
         };
 
         return array_map(
-            fn(Friendship $friendship) => $this->friendshipMapper->toReadDto($friendship),
+            fn(Friendship $friendship) => $this->friendshipMapper->toReadDto($friendship, $user),
             $friendships
         );
     }
