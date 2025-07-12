@@ -24,17 +24,26 @@ class FriendshipMapper
      * @param Friendship $friendship
      * @return FriendshipReadDTO
      */
-    public function toReadDto(Friendship $friendship): FriendshipReadDTO
+    public function toReadDto(Friendship $friendship, User $currentUser): FriendshipReadDTO
     {
         $dto = new FriendshipReadDTO();
         $dto->id = $friendship->getId();
-        $dto->applicant = $this->mapUser($friendship->getApplicant());
-        $dto->recipient = $this->mapUser($friendship->getRecipient());
         $dto->status = $friendship->getStatus();
         $dto->createdAt = $friendship->getCreatedAt();
 
+        if (!$currentUser instanceof User) {
+            throw new \LogicException('Utilisateur non connecté dans le mapper.');
+        }
+
+        if ($friendship->getApplicant() === $currentUser) {
+            $dto->friend = $this->mapUser($friendship->getRecipient());
+        } else {
+            $dto->friend = $this->mapUser($friendship->getApplicant());
+        }
+
         return $dto;
     }
+
 
     /**
      * Transforme un User en UserReadDTO pour l'inclure dans un FriendshipReadDTO.
