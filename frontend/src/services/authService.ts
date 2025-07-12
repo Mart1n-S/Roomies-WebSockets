@@ -1,6 +1,14 @@
 import axios from '@/modules/axios'
 
 /**
+ * Modes d'appel pour getCurrentUser :
+ * - 'default'     : comportement normal (intercepteur actif, redirection possible)
+ * - 'refreshable' : silencieux mais autorise un refresh token si JWT expiré
+ * - 'ignore'      : ne tente rien si 401 (pas de refresh, pas de redirection)
+ */
+type SilentAuthMode = 'default' | 'refreshable' | 'ignore'
+
+/**
  * Envoie une requête de connexion à l'API.
  * @param email Email de l'utilisateur
  * @param password Mot de passe
@@ -24,11 +32,20 @@ export async function register(formData: FormData) {
 }
 
 /**
- * Récupère l'utilisateur connecté à partir du token.
- * @returns Données utilisateur
+ * Récupère l'utilisateur connecté à partir du token (JWT en cookie).
+ * @param mode Contrôle le comportement face aux erreurs 401
+ * @returns L'utilisateur ou lève une erreur Axios
  */
-export async function getCurrentUser() {
-    const response = await axios.get('/user')
+export async function getCurrentUser(mode: SilentAuthMode = 'default') {
+    const config = {
+        headers: {} as Record<string, string>
+    }
+
+    if (mode !== 'default') {
+        config.headers['X-Silent-Auth'] = mode
+    }
+
+    const response = await axios.get('/user', config)
     return response.data
 }
 

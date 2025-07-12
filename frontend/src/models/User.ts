@@ -4,3 +4,9 @@ export interface User {
     pseudo: string
     avatarUrl: string | null
 }
+
+export interface UserPublic {
+    pseudo: string
+    avatar: string
+    friendCode: string
+}

@@ -46,11 +46,19 @@ axiosInstance.interceptors.response.use(
     async (error: AxiosError) => {
         const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
 
+        const silentAuthMode = originalRequest.headers?.['X-Silent-Auth']
+
+
+        // Requête silencieuse à ignorer totalement
+        if (silentAuthMode === 'ignore') {
+            return Promise.reject(error)
+        }
+
         // Vérifie si c'est bien une erreur 401 ET si on n'a pas déjà tenté le refresh
         if (
             error.response?.status === 401 &&
             !originalRequest._retry &&
-            !originalRequest.url?.includes('/token/refresh') // on n’essaie pas de refresh sur l’endpoint de refresh
+            !originalRequest.url?.includes('/token/refresh')
         ) {
             originalRequest._retry = true
 

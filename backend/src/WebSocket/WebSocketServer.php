@@ -7,17 +7,18 @@ use Ratchet\MessageComponentInterface;
 use App\WebSocket\Router\MessageRouter;
 use App\Security\WebSocketAuthenticator;
 use App\WebSocket\Connection\ConnectionRegistry;
+use App\State\Websocket\Group\GroupReadProvider;
+use Symfony\Component\Serializer\SerializerInterface;
 
 
 class WebSocketServer implements MessageComponentInterface
 {
-    // /** @var ConnectionInterface[] */
-    // private array $connections = [];
-
     public function __construct(
         private readonly MessageRouter $router,
         private readonly WebSocketAuthenticator $authenticator,
-        private readonly ConnectionRegistry $registry
+        private readonly ConnectionRegistry $registry,
+        private readonly GroupReadProvider $groupReadProvider,
+        private readonly SerializerInterface $serializer
     ) {}
 
     public function onOpen(ConnectionInterface $conn): void
@@ -66,6 +67,16 @@ class WebSocketServer implements MessageComponentInterface
                 ]));
 
                 echo "✅ Utilisateur authentifié via message : {$user->getEmail()} (ID: {$user->getId()})\n";
+
+                // Envoi des groupes
+                $groups = $this->groupReadProvider->getGroupsForUser($user);
+
+                $json = $this->serializer->serialize($groups, 'json', ['groups' => ['read:group']]);
+
+                $from->send(json_encode([
+                    'type' => 'init_groups',
+                    'data' => json_decode($json, true),
+                ]));
             } catch (\Throwable $e) {
                 $from->send(json_encode([
                     'type' => 'error',

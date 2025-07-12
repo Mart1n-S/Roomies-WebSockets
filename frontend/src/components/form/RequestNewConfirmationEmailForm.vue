@@ -18,6 +18,7 @@ import { useToast } from 'vue-toastification'
 import EmailInput from '@/components/form/inputs/EmailInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import { useAuthStore } from '@/stores/authStore'
+import { useRouter } from 'vue-router'
 
 const toast = useToast()
 const auth = useAuthStore()
@@ -26,6 +27,7 @@ const email = ref('')
 const emailError = ref('')
 const isEmailValid = ref(false)
 const loading = ref(false)
+const router = useRouter()
 
 auth.resetError()
 
@@ -41,6 +43,7 @@ async function handleSubmit() {
         loading.value = true
         const res = await auth.requestNewConfirmationEmail(email.value)
         toast.success(res.message || 'Si un compte existe, un nouvel email de confirmation a été envoyé.')
+        router.push('/login')
     } catch {
         toast.error(auth.error)
     } finally {

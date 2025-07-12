@@ -1,6 +1,6 @@
 <?php
 
-namespace App\State\WebSocket;
+namespace App\State\WebSocket\Security;
 
 use App\Entity\User;
 use ApiPlatform\Metadata\Operation;

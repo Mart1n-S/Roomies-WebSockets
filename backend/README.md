@@ -18,9 +18,12 @@
 3. **Configurer les variables d'environnement**
    - Copier `.env` en `.env.local` et adapter les paramètres (BDD, mailer, etc.)
 
-4. **Générer les clefs JWT**
+4. **Générer les clefs JWT et certificat TLS auto-signé pour le WebsocketSecure (wss)**
    ```sh
    php bin/console lexik:jwt:generate-keypair
+   ```
+   ```sh
+   openssl req -x509 -newkey rsa:4096 -nodes -keyout certs/key.pem -out certs/cert.pem -days 365 -subj "/CN=localhost"
    ```
 
 5. **Lancer les migrations**
@@ -110,12 +113,6 @@ TODO:
 TODO: 
 Mettre au propre le Websocket tester un echange de message basculer ce qui est en api platform en version websockets
 
-
-
-
-
-Finir l'authentification JWT en websocket cote back modifier le front et tester 
-Comprendre le delire des cookies car en websocket pas accessible etc etc 
 
 
 
@@ -345,3 +342,6 @@ Les cookies sont **partagés dans une même session navigateur** :
 > ✅ **Ce n’était pas un bug dans mon code.**
 > C’était un **effet logique des cookies** dans un contexte de test non isolé.
 
+
+
+> 📝 **Note :** En mode navigation privée, certaines fonctionnalités nécessitent l’activation des **cookies tiers**. Pensez à les accepter dans les paramètres de votre session privée pour garantir le bon fonctionnement des sites.

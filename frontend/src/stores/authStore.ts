@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { login, register, getCurrentUser, requestPasswordReset, resetPassword, requestNewConfirmationEmail, logout } from '@/services/authService'
 import type { User } from '@/models/User'
 import { router } from '@/router'
+import { useWebSocketStore } from '@/stores/wsStore'
 
 
 export const useAuthStore = defineStore('auth', {
@@ -26,6 +27,9 @@ export const useAuthStore = defineStore('auth', {
                 await login(email, password)
                 this.user = await getCurrentUser()
                 this.userFetched = true
+
+                const wsStore = useWebSocketStore()
+                await wsStore.init()
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'Erreur lors de la connexion.'
             } finally {
@@ -52,10 +56,13 @@ export const useAuthStore = defineStore('auth', {
         /**
          * Récupère les infos de l'utilisateur connecté.
          */
-        async fetchUser() {
+        async fetchUser(refreshable = false) {
             try {
                 this.loading = true
-                this.user = await getCurrentUser()
+                const mode = refreshable ? 'refreshable' : 'ignore'
+                this.user = await getCurrentUser(mode)
+                const wsStore = useWebSocketStore()
+                await wsStore.init()
             } catch {
                 this.user = null
             } finally {
@@ -131,6 +138,11 @@ export const useAuthStore = defineStore('auth', {
             } catch (err) {
                 console.warn('Erreur lors du logout', err)
             } finally {
+                const wsStore = useWebSocketStore()
+                if (wsStore.isConnected) {
+                    wsStore.disconnect()
+                }
+
                 this.user = null
                 this.userFetched = false
                 this.error = ''

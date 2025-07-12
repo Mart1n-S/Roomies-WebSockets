@@ -16,6 +16,7 @@ const routes = [
     name: 'verified-email',
     component: () => import('@/views/VerifiedEmailView.vue'),
     meta: {
+      requiresGuest: true,
       title: 'Vérification email - Roomies'
     }
   },
@@ -67,12 +68,18 @@ const routes = [
   },
   {
     path: '/dashboard',
-    name: 'home.private',
-    component: () => import('@/views/HomePrivateView.vue'),
-    meta: {
-      requiresAuth: true,
-      title: 'Tableau de bord - Roomies'
-    }
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'home.private',
+        component: () => import('@/views/HomePrivateView.vue'),
+        meta: {
+          title: 'Tableau de bord - Roomies'
+        }
+      }
+    ]
   },
 
 ]
@@ -93,13 +100,12 @@ router.afterEach((to) => {
 router.beforeEach(async (to, from, next) => {
   const auth = useAuthStore()
 
-  // On ne fetch que si :
-  //  - la route a besoin de connaître l'utilisateur
-  //  - ET qu'on n'a pas déjà tenté de le récupérer
-  //  - ET qu'on ne l’a pas déjà dans l’état
+  // Si l'utilisateur n'est pas encore récupéré, on le fait
   if ((to.meta.requiresAuth || to.meta.requiresGuest) && !auth.user && !auth.userFetched) {
-    await auth.fetchUser()
+    const refreshable = !!to.meta.requiresAuth
+    await auth.fetchUser(refreshable)
   }
+
 
   // Route réservée aux invités
   if (to.meta.requiresGuest && auth.user) {
