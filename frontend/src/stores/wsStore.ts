@@ -6,7 +6,7 @@ import {
     removeWebSocketListener
 } from '@/services/websocket'
 import { useRoomStore } from './roomStore'
-
+import { useToast } from 'vue-toastification'
 
 export const useWebSocketStore = defineStore('ws', {
     state: () => ({
@@ -41,6 +41,15 @@ export const useWebSocketStore = defineStore('ws', {
             if (data.type === 'init_groups') {
                 const roomStore = useRoomStore()
                 roomStore.setRooms(data.data)
+            }
+
+            if (data.type === 'room_created') {
+                const roomStore = useRoomStore()
+                roomStore.addRoom(data.room)
+
+                const toast = useToast()
+                const roomName = data.room?.name ?? 'un groupe'
+                toast.info(`Tu as été ajouté(e) au groupe "${roomName}"`)
             }
 
             if (data.type === 'error') {

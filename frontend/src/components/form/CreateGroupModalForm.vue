@@ -83,6 +83,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import { useFriendshipStore } from '@/stores/friendshipStore'
 import { useRoomStore } from '@/stores/roomStore'
 import { useToast } from 'vue-toastification'
+import { sendWebSocketMessage } from '@/services/websocket'
 
 const emit = defineEmits(['close'])
 const friendshipStore = useFriendshipStore()
@@ -174,7 +175,7 @@ async function submitForm() {
     if (!validateForm()) return
 
     try {
-        await roomStore.createGroup(form.value)
+        await roomStore.createGroupAndNotify(form.value)
         toast.success('Groupe créé avec succès !')
         close()
     } catch (e: any) {

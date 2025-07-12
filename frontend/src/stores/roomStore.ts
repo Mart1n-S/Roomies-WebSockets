@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { createGroup } from '@/services/roomService'
 import type { Room } from '@/models/Room'
+import { sendWebSocketMessage } from '@/services/websocket'
 
 export const useRoomStore = defineStore('room', {
     state: () => ({
@@ -35,6 +36,23 @@ export const useRoomStore = defineStore('room', {
             } finally {
                 this.loading = false
             }
+        },
+
+        /**
+         * Crée un groupe et notifie les membres connectés via WebSocket
+         */
+        async createGroupAndNotify(payload: { name: string; members: string[] }): Promise<Room> {
+            const createdRoom = await this.createGroup(payload)
+
+            sendWebSocketMessage({
+                type: 'notify_room_created',
+                payload: {
+                    room: createdRoom,
+                    memberFriendCodes: payload.members
+                }
+            })
+
+            return createdRoom
         }
     },
 
