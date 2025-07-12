@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Security\EmailVerifier;
 use App\Repository\UserRepository;
 use Symfony\Component\Mime\Address;
@@ -9,6 +10,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\EventListener\UserRegistrationListener;
+use App\Repository\RoomUserRepository;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Security\Exception\TooManyRequestsException;
@@ -161,5 +163,21 @@ class RegistrationController extends AbstractController
         $jwt = \Firebase\JWT\JWT::encode($payload, $privateKeyResource, 'RS256');
 
         echo $jwt;
+    }
+
+    // TODO: a supprimer utiliser pour des test
+    #[Route('/room', name: 'ws-room')]
+    public function groom(RoomUserRepository $roomUserRepository, UserRepository $userRepository)
+    {
+        $user = $userRepository->findOneBy(['email' => "user@user.com"]);
+
+        $roomUsers = $roomUserRepository->findGroupsForUser($user);
+
+        foreach ($roomUsers as $roomUser) {
+            $room = $roomUser->getRoom();
+            dump($room);
+        }
+
+        dd($roomUsers);
     }
 }

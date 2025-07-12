@@ -72,12 +72,16 @@ TODO: Finaliser l'authentification
 - Cote front rendre coherent validite duree cookies et validite duree jwt et refresh token =>ok
 - Mettre à jour le refresh token et le fixe => ok rien a faire car des quil est invalide il est delete
 - Si cookies ou jwt expiré envoyer le refresh token => Ok 
-
-
-- Ajouter l'ouverture de la websocket a la connexion
-- Ajouter la connexion si cookies ou jwt valide => ok --> a faire :  ouverture de la websocket
-- Ajouter la gestion de la déconnexion
+- 🧙‍♂️ La mise en place de docker semble ok penser a tout rechecker => OK
+- Ajouter l'ouverture de la websocket a la connexion => ok 
+- Ajouter la connexion si cookies ou jwt valide => ok --> a faire :  ouverture de la websocket => ok
+  
+- Ajouter la gestion de la déconnexion -> backend ok reste a mettre cote front
 
 - creer le dashboard
+- Connecter le fais de recuperer les rooms du user 
+- Creer la page profil du user 
+- creer une modal qui permet de créer une room
+- creer le volet pour voir toutes les discussions du user
 - voir google doc pour la suite
 - ajouter test a la fin

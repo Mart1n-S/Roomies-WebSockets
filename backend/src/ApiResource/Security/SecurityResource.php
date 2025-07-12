@@ -9,7 +9,7 @@ use ApiPlatform\Metadata\ApiResource;
 use App\Controller\SecurityController;
 use App\Dto\Websocket\WebSocketTokenRead;
 use App\Controller\RegistrationController;
-use App\State\WebSocket\WebSocketTokenProvider;
+use App\State\WebSocket\Security\WebSocketTokenProvider;
 
 
 #[ApiResource(
@@ -21,7 +21,7 @@ use App\State\WebSocket\WebSocketTokenProvider;
             security: "is_granted('PUBLIC_ACCESS')",
             description: 'Rafraîchir le token utilisateur à partir du cookie sécurisé contenant le refresh token.',
             openapi: new Model\Operation(
-                tags: ['Refresh_Token'],
+                tags: ['Security'],
                 summary: 'Rafraîchissement du token utilisateur avec le refresh token en cookie sécurisé',
                 responses: [
                     '200' => [
@@ -59,10 +59,10 @@ use App\State\WebSocket\WebSocketTokenProvider;
             uriTemplate: '/logout',
             name: 'logout',
             security: "is_granted('PUBLIC_ACCESS')",
-            openapi: new \ApiPlatform\OpenApi\Model\Operation(
+            openapi: new Model\Operation(
                 summary: 'Déconnexion utilisateur',
                 description: 'Déconnecte l’utilisateur en supprimant le refresh token du cookie et de la base de données.',
-                tags: ['Auth'],
+                tags: ['Security'],
                 responses: [
                     '204' => [
                         'description' => 'Déconnexion réussie, aucun contenu retourné.',
@@ -82,7 +82,7 @@ use App\State\WebSocket\WebSocketTokenProvider;
             security: "is_granted('PUBLIC_ACCESS')",
             description: 'Demander la réinitialisation de mot de passe',
             openapi: new Model\Operation(
-                tags: ['Password_Reset'],
+                tags: ['Security'],
                 summary: 'Demander une réinitialisation de mot de passe',
                 requestBody: new Model\RequestBody(
                     content: new \ArrayObject([
@@ -135,7 +135,7 @@ use App\State\WebSocket\WebSocketTokenProvider;
             security: "is_granted('PUBLIC_ACCESS')",
             description: 'Réinitialiser le mot de passe avec un token',
             openapi: new Model\Operation(
-                tags: ['Password_Reset'],
+                tags: ['Security'],
                 summary: 'Réinitialisation de mot de passe',
                 requestBody: new Model\RequestBody(
                     content: new \ArrayObject([
@@ -191,7 +191,7 @@ use App\State\WebSocket\WebSocketTokenProvider;
             security: "is_granted('PUBLIC_ACCESS')",
             description: 'Vérification de l\'email de l\'utilisateur',
             openapi: new Model\Operation(
-                tags: ['Email_Verification'],
+                tags: ['Security'],
                 summary: 'Vérification de l\'email de l\'utilisateur',
                 description: 'Cette opération permet de vérifier l\'email de l\'utilisateur. ' .
                     '<strong>Important :</strong> Avant d\'envoyer la requête, veuillez <em>décoder les paramètres de l\'URL</em>. ' .
@@ -277,7 +277,7 @@ use App\State\WebSocket\WebSocketTokenProvider;
             security: "is_granted('PUBLIC_ACCESS')",
             description: 'Demander un nouvel email de confirmation pour un utilisateur non confirmé ou dont le lien de confirmation a expiré',
             openapi: new Model\Operation(
-                tags: ['Email_Verification'],
+                tags: ['Security'],
                 summary: 'Demander un nouvel email de confirmation',
                 requestBody: new Model\RequestBody(
                     content: new \ArrayObject([
@@ -344,7 +344,7 @@ use App\State\WebSocket\WebSocketTokenProvider;
             openapi: new Model\Operation(
                 summary: 'Obtenir un token WebSocket temporaire',
                 description: 'Retourne un JWT de courte durée (2 minutes) pour établir une connexion WebSocket sécurisée. Le JWT est signé côté serveur et contient l\'ID et l\'identifiant de l\'utilisateur.',
-                tags: ['WebSocket'],
+                tags: ['Security'],
                 responses: [
                     '200' => [
                         'description' => 'JWT temporaire pour WebSocket',

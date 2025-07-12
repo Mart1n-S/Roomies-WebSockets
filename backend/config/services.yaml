@@ -93,6 +93,15 @@ services:
     arguments:
       $publicKeyPath: "%kernel.project_dir%/config/jwt/public.pem"
 
+  App\State\Websocket\Group\GroupReadProvider:
+    public: true
+    autowire: true
+    autoconfigure: true
+
+  Symfony\Component\Serializer\SerializerInterface:
+    public: true
+    alias: serializer
+
   App\WebSocket\Handler\:
     resource: "../src/WebSocket/Handler"
     tags: ["app.websocket_handler"]

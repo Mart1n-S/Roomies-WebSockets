@@ -10,11 +10,14 @@ use Symfony\Component\Dotenv\Dotenv;
 use App\WebSocket\Router\MessageRouter;
 use App\Security\WebSocketAuthenticator;
 use App\WebSocket\Connection\ConnectionRegistry;
+use App\State\Websocket\Group\GroupReadProvider;
+use Symfony\Component\Serializer\SerializerInterface;
 
 use React\Socket\SocketServer;
 use React\Socket\SecureServer;
 use React\EventLoop\Loop;
 
+// Configuration du serveur WebSocket sécurisé (wss://)
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 // Chargement manuel des variables d'environnement si non définies
@@ -49,6 +52,8 @@ try {
 $authenticator = $container->get(WebSocketAuthenticator::class);
 $router = $container->get(MessageRouter::class);
 $registry = $container->get(ConnectionRegistry::class);
+$groupReadProvider = $container->get(GroupReadProvider::class);
+$serializer = $container->get(SerializerInterface::class);
 
 // Configuration du serveur WebSocket sécurisé (wss://)
 $loop = Loop::get();
@@ -63,11 +68,19 @@ $secureSocket = new SecureServer($socket, $loop, [
 
 $httpServer = new HttpServer(
     new WsServer(
-        new WebSocketServer($router, $authenticator, $registry)
+        new WebSocketServer(
+            $router,
+            $authenticator,
+            $registry,
+            $groupReadProvider,
+            $serializer
+        )
     )
 );
 
+
 $server = new IoServer($httpServer, $secureSocket, $loop);
+echo "🧠 WebSocket Server en écoute sur wss://localhost/ws/\n";
 $server->run();
 
 
@@ -75,7 +88,7 @@ $server->run();
 
 
 
-
+// Configuration du serveur WebSocket sans SSL (ws://)
 // use App\Kernel;
 // use Ratchet\Http\HttpServer;
 // use Ratchet\Server\IoServer;

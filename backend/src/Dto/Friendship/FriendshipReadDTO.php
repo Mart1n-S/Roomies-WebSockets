@@ -14,10 +14,7 @@ class FriendshipReadDTO
     public Uuid $id;
 
     #[Groups(['read:friendship'])]
-    public UserReadDTO $applicant;
-
-    #[Groups(['read:friendship'])]
-    public UserReadDTO $recipient;
+    public UserReadDTO $friend;
 
     #[Groups(['read:friendship'])]
     public FriendshipStatus $status;

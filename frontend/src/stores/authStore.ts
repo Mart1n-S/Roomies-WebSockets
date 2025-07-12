@@ -56,10 +56,11 @@ export const useAuthStore = defineStore('auth', {
         /**
          * Récupère les infos de l'utilisateur connecté.
          */
-        async fetchUser() {
+        async fetchUser(refreshable = false) {
             try {
                 this.loading = true
-                this.user = await getCurrentUser()
+                const mode = refreshable ? 'refreshable' : 'ignore'
+                this.user = await getCurrentUser(mode)
                 const wsStore = useWebSocketStore()
                 await wsStore.init()
             } catch {
