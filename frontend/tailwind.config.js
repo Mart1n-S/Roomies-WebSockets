@@ -1,5 +1,7 @@
+const scrollbar = require('tailwind-scrollbar')
+
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: ['./index.html', './src/**/*.{vue,js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -17,5 +19,5 @@ export default {
       },
     },
   },
-  plugins: [],
+  plugins: [scrollbar],
 }

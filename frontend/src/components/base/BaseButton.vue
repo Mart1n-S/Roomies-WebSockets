@@ -1,6 +1,6 @@
 <template>
     <button :type="type" :disabled="loading || disabled" :class="computedClasses">
-        <span v-if="iconLeft && !loading" class="mr-2">
+        <span v-if="iconLeft && !loading" :class="{ 'mr-2': !noIconSpace }">
             <slot name="icon-left" />
         </span>
 
@@ -8,7 +8,7 @@
 
         <span v-else class="animate-pulse"><i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i></span>
 
-        <span v-if="iconRight && !loading" class="ml-2">
+        <span v-if="iconRight && !loading" :class="{ 'ml-2': !noIconSpace }">
             <slot name="icon-right" />
         </span>
     </button>
@@ -24,6 +24,7 @@ const props = defineProps<{
     disabled?: boolean
     iconLeft?: boolean
     iconRight?: boolean
+    noIconSpace?: boolean
     class?: string
 }>()
 

@@ -79,5 +79,9 @@ TODO: Finaliser l'authentification
 - Ajouter la gestion de la déconnexion -> backend ok reste a mettre cote front
 
 - creer le dashboard
+- Connecter le fais de recuperer les rooms du user 
+- Creer la page profil du user 
+- creer une modal qui permet de créer une room
+- creer le volet pour voir toutes les discussions du user
 - voir google doc pour la suite
 - ajouter test a la fin
