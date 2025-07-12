@@ -29,6 +29,15 @@ export const useRoomStore = defineStore('room', {
             try {
                 const newGroup = await createGroup(payload)
                 this.addRoom(newGroup)
+
+                sendWebSocketMessage({
+                    type: 'notify_room_created',
+                    payload: {
+                        room: newGroup,
+                        memberFriendCodes: payload.members
+                    }
+                })
+
                 return newGroup
             } catch (err: any) {
                 this.error = err.response?.data?.message || 'Erreur lors de la création du groupe'
@@ -36,23 +45,6 @@ export const useRoomStore = defineStore('room', {
             } finally {
                 this.loading = false
             }
-        },
-
-        /**
-         * Crée un groupe et notifie les membres connectés via WebSocket
-         */
-        async createGroupAndNotify(payload: { name: string; members: string[] }): Promise<Room> {
-            const createdRoom = await this.createGroup(payload)
-
-            sendWebSocketMessage({
-                type: 'notify_room_created',
-                payload: {
-                    room: createdRoom,
-                    memberFriendCodes: payload.members
-                }
-            })
-
-            return createdRoom
         }
     },
 

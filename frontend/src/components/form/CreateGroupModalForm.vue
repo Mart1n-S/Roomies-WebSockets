@@ -175,7 +175,7 @@ async function submitForm() {
     if (!validateForm()) return
 
     try {
-        await roomStore.createGroupAndNotify(form.value)
+        await roomStore.createGroup(form.value)
         toast.success('Groupe créé avec succès !')
         close()
     } catch (e: any) {
