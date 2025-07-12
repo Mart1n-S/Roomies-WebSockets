@@ -5,6 +5,8 @@ import {
     addWebSocketListener,
     removeWebSocketListener
 } from '@/services/websocket'
+import { useRoomStore } from './roomStore'
+
 
 export const useWebSocketStore = defineStore('ws', {
     state: () => ({
@@ -34,6 +36,11 @@ export const useWebSocketStore = defineStore('ws', {
 
             if (data.type === 'authenticated') {
                 this.isConnected = true
+            }
+
+            if (data.type === 'init_groups') {
+                const roomStore = useRoomStore()
+                roomStore.setRooms(data.data)
             }
 
             if (data.type === 'error') {

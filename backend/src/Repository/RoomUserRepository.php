@@ -2,9 +2,10 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\RoomUser;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @extends ServiceEntityRepository<RoomUser>
@@ -32,5 +33,23 @@ class RoomUserRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    /**
+     * Trouve les groupes (rooms de type groupe) auxquels un utilisateur appartient.
+     *
+     * @param User $user
+     * @return RoomUser[]
+     */
+    public function findGroupsForUser(User $user): array
+    {
+        return $this->createQueryBuilder('ru')
+            ->join('ru.room', 'r')
+            ->andWhere('ru.user = :userId')
+            ->andWhere('r.isGroup = true')
+            ->orderBy('ru.lastSeenAt', 'DESC')
+            ->setParameter('userId', $user->getId()->toBinary())
+            ->getQuery()
+            ->getResult();
     }
 }
