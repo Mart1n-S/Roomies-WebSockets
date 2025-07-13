@@ -12,3 +12,11 @@ export async function createGroup(payload: CreateGroupPayload) {
     const res = await axios.post('/groups', payload)
     return res.data
 }
+
+/**
+ * Récupère les discussions privées de l'utilisateur connecté.
+ */
+export async function fetchPrivateRooms() {
+    const res = await axios.get('/groups/private/chat')
+    return res.data
+}

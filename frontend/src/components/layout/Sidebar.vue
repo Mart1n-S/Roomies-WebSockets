@@ -11,7 +11,7 @@
             </BaseButton>
         </div>
 
-        <div class="w-8 h-[1px] bg-roomies-gray1 my-3"></div>
+        <hr class="w-8 h-[1px] border-roomies-gray1 my-3" />
 
         <!-- Partie scrollable : rooms -->
         <div class="flex-1 w-full overflow-y-auto touch-pan-y md:overflow-hidden md:hover:overflow-y-auto">
@@ -24,7 +24,7 @@
             </div>
         </div>
 
-        <div class="w-8 h-[1px] bg-roomies-gray1 my-3"></div>
+        <hr class="w-8 h-[1px] border-roomies-gray1 my-3" />
 
         <!-- Partie basse -->
         <div class="flex flex-col items-center space-y-3">

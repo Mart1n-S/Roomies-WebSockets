@@ -55,4 +55,22 @@ class RoomRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getOneOrNullResult();
     }
+
+    /**
+     * Récupère toutes les discussions privées (isGroup = false) auxquelles appartient l’utilisateur.
+     *
+     * @param User $user
+     * @return Room[]
+     */
+    public function findPrivateRoomsByUser(User $user): array
+    {
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.members', 'ru')
+            ->where('ru.user = :user')
+            ->andWhere('r.isGroup = false')
+            ->setParameter('user', $user->getId()->toBinary())
+            ->orderBy('r.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

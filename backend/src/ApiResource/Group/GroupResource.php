@@ -10,12 +10,15 @@ use App\Dto\Group\GroupReadDTO;
 use App\Dto\Group\GroupCreateDTO;
 use App\Dto\Group\GroupAddMemberDTO;
 use ApiPlatform\Metadata\ApiResource;
+use App\State\Group\GroupReadProvider;
+use ApiPlatform\Metadata\GetCollection;
 use App\State\Group\GroupCreateProcessor;
 use App\Dto\Group\GroupMemberRolePatchDTO;
 use ApiPlatform\Doctrine\Orm\State\Options;
 use App\State\Group\GroupAddMemberProcessor;
 use App\State\Group\GroupMemberRolePatchProcessor;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+
 
 #[ApiResource(
     shortName: 'Group Discussion',
@@ -319,6 +322,18 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                         ]
                     ],
                 ]
+            )
+        ),
+        new GetCollection(
+            uriTemplate: '/groups/private/chat',
+            name: 'myRoomsGetCollection',
+            provider: GroupReadProvider::class,
+            output: GroupReadDTO::class,
+            normalizationContext: ['groups' => ['read:group']],
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            description: 'Récupère toutes les discussions privées de l\'utilisateur.',
+            openapi: new Model\Operation(
+                summary: 'Liste des discussions privées de l’utilisateur.'
             )
         )
     ]

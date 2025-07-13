@@ -2,6 +2,7 @@ export interface User {
     id: number
     email: string
     pseudo: string
+    friendCode: string
     avatarUrl: string | null
 }
 
