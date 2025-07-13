@@ -12,6 +12,7 @@ use App\Security\WebSocketAuthenticator;
 use App\WebSocket\Connection\ConnectionRegistry;
 use App\State\Websocket\Group\GroupReadProvider;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\WebSocket\Handler\UserStatusHandler;
 
 use React\Socket\SocketServer;
 use React\Socket\SecureServer;
@@ -54,6 +55,7 @@ $router = $container->get(MessageRouter::class);
 $registry = $container->get(ConnectionRegistry::class);
 $groupReadProvider = $container->get(GroupReadProvider::class);
 $serializer = $container->get(SerializerInterface::class);
+$userStatusHandler = $container->get(UserStatusHandler::class);
 
 // Configuration du serveur WebSocket sécurisé (wss://)
 $loop = Loop::get();
@@ -73,7 +75,8 @@ $httpServer = new HttpServer(
             $authenticator,
             $registry,
             $groupReadProvider,
-            $serializer
+            $serializer,
+            $userStatusHandler
         )
     )
 );

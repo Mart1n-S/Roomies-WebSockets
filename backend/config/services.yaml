@@ -108,6 +108,11 @@ services:
     autowire: true
     autoconfigure: false
 
+  App\WebSocket\Handler\UserStatusHandler:
+    public: true
+    autowire: true
+    autoconfigure: true
+
   App\WebSocket\Router\MessageRouter:
     public: true
     arguments:

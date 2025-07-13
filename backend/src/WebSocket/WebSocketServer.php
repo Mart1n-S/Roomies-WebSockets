@@ -9,6 +9,7 @@ use App\Security\WebSocketAuthenticator;
 use App\WebSocket\Connection\ConnectionRegistry;
 use App\State\Websocket\Group\GroupReadProvider;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\WebSocket\Handler\UserStatusHandler;
 
 
 class WebSocketServer implements MessageComponentInterface
@@ -18,7 +19,8 @@ class WebSocketServer implements MessageComponentInterface
         private readonly WebSocketAuthenticator $authenticator,
         private readonly ConnectionRegistry $registry,
         private readonly GroupReadProvider $groupReadProvider,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
+        private readonly UserStatusHandler $userStatusHandler
     ) {}
 
     public function onOpen(ConnectionInterface $conn): void
@@ -68,6 +70,10 @@ class WebSocketServer implements MessageComponentInterface
 
                 echo "✅ Utilisateur authentifié via message : {$user->getEmail()} (ID: {$user->getId()})\n";
 
+                $this->userStatusHandler->notifyFriendsAboutStatusChange($from, true);
+                $this->userStatusHandler->sendOnlineFriendsList($from);
+
+
                 // Envoi des groupes
                 $groups = $this->groupReadProvider->getGroupsForUser($user);
 
@@ -105,6 +111,7 @@ class WebSocketServer implements MessageComponentInterface
     {
         if (isset($conn->user)) {
             $this->registry->unregister($conn->user->getId());
+            $this->userStatusHandler->notifyFriendsAboutStatusChange($conn, false);
             echo "🔴 Déconnexion de l'utilisateur ID {$conn->user->getId()}\n";
         } else {
             echo "🔌 Déconnexion d'un client non authentifié\n";

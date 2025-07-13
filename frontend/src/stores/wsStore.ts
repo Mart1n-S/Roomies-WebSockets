@@ -7,6 +7,7 @@ import {
 } from '@/services/websocket'
 import { useRoomStore } from './roomStore'
 import { useToast } from 'vue-toastification'
+import { useUserStatusStore } from './userStatusStore'
 
 export const useWebSocketStore = defineStore('ws', {
     state: () => ({
@@ -50,6 +51,21 @@ export const useWebSocketStore = defineStore('ws', {
                 const toast = useToast()
                 const roomName = data.room?.name ?? 'un groupe'
                 toast.info(`Tu as été ajouté(e) au groupe "${roomName}"`)
+            }
+
+            if (data.type === 'user-status') {
+                const userStatusStore = useUserStatusStore()
+
+                if (data.online) {
+                    userStatusStore.setUserOnline(data.friendCode)
+                } else {
+                    userStatusStore.setUserOffline(data.friendCode)
+                }
+            }
+
+            if (data.type === 'bulk-status') {
+                const userStatusStore = useUserStatusStore()
+                data.onlineFriends.forEach((code: string) => userStatusStore.setUserOnline(code))
             }
 
             if (data.type === 'error') {

@@ -24,4 +24,14 @@ class ConnectionRegistry
     {
         return $this->connections[$userId->toBinary()] ?? null;
     }
+
+    public function getAllConnectedUserIds(): array
+    {
+        return array_keys($this->connections);
+    }
+
+    public function isConnected(Uuid $userId): bool
+    {
+        return isset($this->connections[$userId->toBinary()]);
+    }
 }
