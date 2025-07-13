@@ -13,50 +13,10 @@
                 <BaseInput name="search" label="Rechercher un ami" v-model="search" autocomplete="off"
                     placeholder="Tapez un pseudo..." type="text" />
 
-                <!-- Liste des amis -->
-                <div class="pr-2 space-y-3 overflow-y-auto max-h-48 scrollbar">
-                    <div v-if="friendshipStore.isLoading" class="flex items-center justify-center h-32">
-                        <div
-                            class="w-8 h-8 border-4 rounded-full border-roomies-blue border-t-transparent animate-spin">
-                        </div>
-                    </div>
-
-                    <template v-else>
-                        <div v-if="filteredFriends.length > 0" class="space-y-2">
-                            <label v-for="friend in filteredFriends" :key="friend.friendCode"
-                                :for="`friend-checkbox-${friend.friendCode}`"
-                                class="flex items-center justify-between p-3 transition-colors rounded-lg cursor-pointer bg-roomies-gray2 hover:bg-roomies-gray1">
-
-                                <!-- Partie gauche : avatar + pseudo -->
-                                <div class="flex items-center space-x-3">
-                                    <img :src="friend.avatar" alt="avatar" class="object-cover w-8 h-8 rounded-full" />
-                                    <span class="font-medium text-white">{{ friend.pseudo }}</span>
-                                </div>
-
-                                <!-- Checkbox stylisée -->
-                                <div class="relative">
-                                    <input type="checkbox" :id="`friend-checkbox-${friend.friendCode}`"
-                                        :name="`friend-${friend.friendCode}`" :value="friend.friendCode"
-                                        v-model="form.members" class="absolute w-0 h-0 opacity-0" />
-                                    <div class="flex items-center justify-center w-6 h-6 transition-all border-2 rounded-md border-roomies-blue"
-                                        :class="{ 'bg-roomies-blue': form.members.includes(friend.friendCode) }">
-                                        <svg v-if="form.members.includes(friend.friendCode)" class="w-4 h-4 text-white"
-                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </label>
-                        </div>
-
-                        <div v-else class="p-4 text-center text-white">
-                            <p>Aucun ami trouvé</p>
-                            <p v-if="search.length > 0" class="text-sm">Essayez avec un autre pseudo</p>
-                        </div>
-                    </template>
-                </div>
-
+                <!-- Composant FriendSelectionList -->
+                <FriendSelectionList :friends="friends" :isLoading="friendshipStore.isLoading"
+                    :selectedFriends="form.members" :searchQuery="search"
+                    @update:selectedFriends="(newValue) => form.members = newValue" />
 
                 <!-- Message d'erreur global -->
                 <p v-if="errors.members" class="text-sm text-red-500">{{ errors.members }}</p>
@@ -70,7 +30,6 @@
                         Créer le groupe
                     </BaseButton>
                 </div>
-
             </form>
         </div>
     </div>
@@ -80,10 +39,10 @@
 import { ref, computed, onMounted, watchEffect, watch } from 'vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
+import FriendSelectionList from '@/components//form/inputs/FriendSelectionList.vue'
 import { useFriendshipStore } from '@/stores/friendshipStore'
 import { useRoomStore } from '@/stores/roomStore'
 import { useToast } from 'vue-toastification'
-import { sendWebSocketMessage } from '@/services/websocket'
 
 const emit = defineEmits(['close'])
 const friendshipStore = useFriendshipStore()
@@ -122,13 +81,6 @@ watchEffect(() => {
 
 // Liste des amis (via le getter du store)
 const friends = computed(() => friendshipStore.friendUsers)
-
-// Liste filtrée par pseudo
-const filteredFriends = computed(() =>
-    friends.value.filter(friend =>
-        friend.pseudo.toLowerCase().includes(search.value.toLowerCase())
-    )
-)
 
 // Validation en temps réel du nom
 watch(() => form.value.name, (newName) => {
@@ -201,30 +153,3 @@ function close() {
     emit('close')
 }
 </script>
-
-<style scoped>
-.scrollbar {
-    scrollbar-gutter: stable;
-    overflow-y: auto;
-}
-
-.scrollbar::-webkit-scrollbar {
-    width: 2px;
-}
-
-.scrollbar::-webkit-scrollbar-thumb {
-    background-color: #6b7280;
-    /* gray-500 */
-    border-radius: 2px;
-}
-
-.scrollbar::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-/* Pour Firefox */
-.scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #6b7280 transparent;
-}
-</style>
