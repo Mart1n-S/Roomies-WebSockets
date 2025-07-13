@@ -20,3 +20,16 @@ export async function fetchPrivateRooms() {
     const res = await axios.get('/groups/private/chat')
     return res.data
 }
+
+/**
+ * Met à jour la visibilité d'une room privée pour l'utilisateur.
+ */
+export async function patchPrivateRoomVisibility(roomUserId: string, isVisible: boolean) {
+    await axios.patch(`/groups/private/chat/${roomUserId}/visibility`, { isVisible },
+        {
+            headers: {
+                'Content-Type': 'application/merge-patch+json'
+            }
+        }
+    )
+}

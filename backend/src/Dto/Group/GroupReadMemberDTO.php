@@ -15,5 +15,8 @@ class GroupReadMemberDTO
     public UserReadDTO $member;
 
     #[Groups(['read:group'])]
+    public bool $isVisible;
+
+    #[Groups(['read:group'])]
     public string $role;
 }

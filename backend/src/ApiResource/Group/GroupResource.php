@@ -17,6 +17,8 @@ use App\Dto\Group\GroupMemberRolePatchDTO;
 use ApiPlatform\Doctrine\Orm\State\Options;
 use App\State\Group\GroupAddMemberProcessor;
 use App\State\Group\GroupMemberRolePatchProcessor;
+use App\Dto\Group\GroupPrivateChatVisibilityPatchDTO;
+use App\State\Group\GroupPrivateChatVisibilityPatchProcessor;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 
 
@@ -114,6 +116,10 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                                                             'friendCode' => ['type' => 'string', 'example' => 'FDBC1A9674538ECC13CC']
                                                         ]
                                                     ],
+                                                    'isVisible' => [
+                                                        'type' => 'boolean',
+                                                        'example' => true
+                                                    ],
                                                     'role' => [
                                                         'type' => 'string',
                                                         'example' => 'owner',
@@ -206,6 +212,10 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                                                             'avatar' => ['type' => 'string', 'example' => 'jean.png'],
                                                             'friendCode' => ['type' => 'string', 'example' => 'FDBC1A9674538ECC13CC']
                                                         ]
+                                                    ],
+                                                    'isVisible' => [
+                                                        'type' => 'boolean',
+                                                        'example' => true
                                                     ],
                                                     'role' => [
                                                         'type' => 'string',
@@ -308,6 +318,10 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                                                             'friendCode' => ['type' => 'string', 'example' => 'FDBC1A9674538ECC13CC']
                                                         ]
                                                     ],
+                                                    'isVisible' => [
+                                                        'type' => 'boolean',
+                                                        'example' => true
+                                                    ],
                                                     'role' => [
                                                         'type' => 'string',
                                                         'example' => 'owner',
@@ -334,6 +348,67 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
             description: 'Récupère toutes les discussions privées de l\'utilisateur.',
             openapi: new Model\Operation(
                 summary: 'Liste des discussions privées de l’utilisateur.'
+            )
+        ),
+        new Patch(
+            uriTemplate: '/groups/private/chat/{id}/visibility',
+            input: GroupPrivateChatVisibilityPatchDTO::class,
+            processor: GroupPrivateChatVisibilityPatchProcessor::class,
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            denormalizationContext: [
+                'groups' => ['patch:chat:visibility'],
+                AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false
+            ],
+            openapi: new Model\Operation(
+                summary: 'Met à jour la visibilité d\'une discussion privée',
+                description: 'Permet de cacher ou afficher une discussion privée dans la liste des conversations',
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/merge-patch+json' => new Model\MediaType(
+                            schema: new \ArrayObject([
+                                'type' => 'object',
+                                'properties' => [
+                                    'isVisible' => [
+                                        'type' => 'boolean',
+                                        'example' => false,
+                                        'description' => 'Nouvel état de visibilité de la conversation'
+                                    ]
+                                ],
+                                'required' => ['isVisible']
+                            ])
+                        )
+                    ])
+                ),
+                responses: [
+                    '200' => [
+                        'description' => 'Visibilité mise à jour avec succès',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'message' => [
+                                            'type' => 'string',
+                                            'example' => 'Visibilité mise à jour'
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    '400' => [
+                        'description' => 'Requête invalide (mauvais format, ID invalide)'
+                    ],
+                    '401' => [
+                        'description' => 'Authentification requise'
+                    ],
+                    '403' => [
+                        'description' => 'Pas autorisé à modifier cette conversation'
+                    ],
+                    '404' => [
+                        'description' => 'Conversation introuvable'
+                    ]
+                ]
             )
         )
     ]

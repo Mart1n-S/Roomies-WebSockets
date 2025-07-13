@@ -4,4 +4,5 @@ export interface RoomMember {
     id: string
     role: 'owner' | 'admin' | 'user'
     member: UserPublic
+    isVisible: boolean
 }

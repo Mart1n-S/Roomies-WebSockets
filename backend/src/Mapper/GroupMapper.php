@@ -46,6 +46,7 @@ class GroupMapper
             $memberDto = new GroupReadMemberDTO();
             $memberDto->id = $roomUser->getId();
             $memberDto->member = $userDto;
+            $memberDto->isVisible = $roomUser->isVisible();
             $memberDto->role = strtolower($roomUser->getRole()->name);
 
             $dto->members[] = $memberDto;

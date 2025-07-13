@@ -25,13 +25,29 @@
             <template v-else>
                 <template v-if="filteredRooms.length">
                     <div v-for="room in filteredRooms" :key="room.id"
-                        class="flex items-center p-2 rounded cursor-pointer hover:bg-roomies-gray2">
-                        <img :src="getOtherMember(room)?.member.avatar" class="w-8 h-8 mr-2 rounded-full" />
-                        <span>{{ getOtherMember(room)?.member.pseudo || 'Discussion' }}</span>
+                        class="relative flex items-center justify-between p-2 rounded cursor-pointer group hover:bg-roomies-gray2">
+
+                        <div class="flex items-center space-x-2">
+                            <img :src="getOtherMember(room)?.member.avatar" class="w-8 h-8 rounded-full" />
+                            <span>{{ getOtherMember(room)?.member.pseudo || 'Discussion' }}</span>
+                        </div>
+
+                        <!-- ❌ Bouton suppression -->
+                        <button @click.stop="hideRoom(room.id)"
+                            class="text-gray-400 transition-opacity duration-150 opacity-0 hover:text-red-500 group-hover:opacity-100">
+                            <i class="pi pi-times" />
+                        </button>
                     </div>
+
                 </template>
                 <div v-else class="p-4 text-sm text-center text-gray-400">
-                    Aucun ami
+                    <template v-if="search.length">
+
+                        Aucun résultat, essayez avec un autre pseudo 🥸
+                    </template>
+                    <template v-else>
+                        Aucun ami
+                    </template>
                 </div>
             </template>
         </div>
@@ -58,9 +74,11 @@ onMounted(() => {
 const isLoading = computed(() => roomStore.isLoading)
 
 const filteredRooms = computed(() =>
-    roomStore.privateRoomsList.filter(r =>
-        r.name.toLowerCase().includes(search.value.toLowerCase())
-    )
+    roomStore.privateRoomsList.filter(room => {
+        const currentUserRoomUser = room.members.find(m => m.member.friendCode === authStore.user?.friendCode)
+        return currentUserRoomUser?.isVisible !== false &&
+            room.name.toLowerCase().includes(search.value.toLowerCase())
+    })
 )
 
 function getOtherMember(room: Room) {
@@ -68,5 +86,13 @@ function getOtherMember(room: Room) {
         m.member.friendCode !== authStore.user?.friendCode
     )
 }
+
+function hideRoom(roomId: string) {
+    const myFriendCode = authStore.user?.friendCode
+    if (myFriendCode) {
+        roomStore.setPrivateRoomVisibility(roomId, false, myFriendCode)
+    }
+}
+
 
 </script>

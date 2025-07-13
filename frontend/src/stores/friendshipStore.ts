@@ -18,25 +18,37 @@ export const useFriendshipStore = defineStore('friendship', {
     }),
 
     getters: {
+        /**
+         * Retourne les amitiés confirmées.
+         */
         acceptedFriends: (state) =>
             state.friendships.filter(f => f.status === 'friend'),
 
+        /**
+         * Retourne les demandes d’amis reçues en attente.
+         */
         pendingReceived: (state) =>
             state.receivedRequests.filter(f => f.status === 'pending'),
 
+        /**
+         * Retourne les demandes d’amis envoyées en attente.
+         */
         pendingSent: (state) =>
             state.sentRequests.filter(f => f.status === 'pending'),
 
+        /**
+         * Retourne uniquement les utilisateurs amis.
+         */
         friendUsers: (state) =>
             state.friendships
                 .filter(f => f.status === 'friend')
                 .map(f => f.friend)
-
     },
 
     actions: {
         /**
-         * Charge les amitiés confirmées (status = friend)
+         * Récupère les amitiés confirmées (status = 'friend').
+         * Met également à jour le timestamp de dernière récupération.
          */
         async fetchFriendships() {
             if (this.isLoading) return

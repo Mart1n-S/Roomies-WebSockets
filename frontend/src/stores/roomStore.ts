@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { createGroup, fetchPrivateRooms } from '@/services/roomService'
+import { createGroup, fetchPrivateRooms, patchPrivateRoomVisibility } from '@/services/roomService'
 import type { Room } from '@/models/Room'
 import { sendWebSocketMessage } from '@/services/websocket'
+import { useToast } from 'vue-toastification'
 
 export const useRoomStore = defineStore('room', {
     state: () => ({
@@ -12,22 +13,44 @@ export const useRoomStore = defineStore('room', {
     }),
 
     actions: {
+        /**
+         * Remplace la liste des salons de groupe.
+         * @param newRooms Nouvelle liste de salons
+         */
         setRooms(newRooms: Room[]) {
             this.rooms = newRooms
         },
 
+        /**
+         * Remplace la liste des salons privés.
+         * @param rooms Nouvelle liste de salons privés
+         */
         setPrivateRooms(rooms: Room[]) {
             this.privateRooms = rooms
         },
 
+        /**
+         * Ajoute un salon à la liste des salons de groupe.
+         * @param room Salon à ajouter
+         */
         addRoom(room: Room) {
             this.rooms.push(room)
         },
 
+        /**
+         * Réinitialise le message d'erreur.
+         * Utile avant une nouvelle action réseau.
+         */
         resetError() {
             this.error = ''
         },
 
+        /**
+         * Crée un nouveau groupe avec un nom et une liste de membres.
+         * Émet également un message WebSocket pour notifier les membres.
+         * @param payload Objet contenant le nom du groupe et les membres
+         * @returns Le groupe nouvellement créé
+         */
         async createGroup(payload: { name: string; members: string[] }): Promise<Room> {
             this.resetError()
             this.loading = true
@@ -52,6 +75,9 @@ export const useRoomStore = defineStore('room', {
             }
         },
 
+        /**
+         * Récupère les salons privés associés à l'utilisateur.
+         */
         async fetchPrivateRooms(): Promise<void> {
             this.resetError()
             this.loading = true
@@ -64,12 +90,62 @@ export const useRoomStore = defineStore('room', {
             } finally {
                 this.loading = false
             }
+        },
+
+        /**
+         * Modifie la visibilité d’un salon privé pour l’utilisateur courant.
+         * La mise à jour est immédiate côté front (optimiste), 
+         * puis confirmée par un appel réseau en arrière-plan.
+         * Si l’appel échoue, la valeur est restaurée.
+         *
+         * @param roomId ID du salon à modifier
+         * @param isVisible Nouvelle visibilité du salon
+         * @param myFriendCode Code ami de l'utilisateur actuel
+         */
+        async setPrivateRoomVisibility(roomId: string, isVisible: boolean, myFriendCode: string): Promise<void> {
+            const toast = useToast()
+            const room = this.privateRooms.find(r => r.id === roomId)
+            const myMembership = room?.members.find(m => m.member.friendCode === myFriendCode)
+
+            if (!room || !myMembership) {
+                toast.error('Salon ou membre introuvable.')
+                return
+            }
+
+            // Sauvegarde de la valeur actuelle pour rollback si erreur
+            const previousVisibility = myMembership.isVisible
+
+            // MAJ immédiate dans le state pour effet visuel instantané
+            myMembership.isVisible = isVisible
+
+            try {
+                // Appel en arrière-plan avec Content-Type correct
+                await patchPrivateRoomVisibility(roomId, isVisible)
+            } catch (err: any) {
+                // Rollback de la visibilité en cas d’échec
+                myMembership.isVisible = previousVisibility
+                this.error = err.response?.data?.message || 'Erreur lors de la modification de la visibilité'
+                toast.error(this.error)
+            }
         }
+
+
     },
 
     getters: {
+        /**
+        * Retourne la liste des salons de groupe.
+        */
         allRooms: (state) => state.rooms,
+
+        /**
+         * Retourne la liste des salons privés.
+         */
         privateRoomsList: (state) => state.privateRooms,
+
+        /**
+         * Indique si une opération est en cours.
+         */
         isLoading: (state) => state.loading
     }
 })

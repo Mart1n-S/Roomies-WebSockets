@@ -36,6 +36,9 @@ class RoomUser
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $lastSeenAt = null;
 
+    #[ORM\Column]
+    private ?bool $isVisible = true;
+
     public function __construct()
     {
         $this->joinedAt = new \DateTimeImmutable();
@@ -102,6 +105,18 @@ class RoomUser
     public function setLastSeenAt(?\DateTimeImmutable $lastSeenAt): static
     {
         $this->lastSeenAt = $lastSeenAt;
+
+        return $this;
+    }
+
+    public function isVisible(): ?bool
+    {
+        return $this->isVisible;
+    }
+
+    public function setIsVisible(bool $isVisible): static
+    {
+        $this->isVisible = $isVisible;
 
         return $this;
     }
