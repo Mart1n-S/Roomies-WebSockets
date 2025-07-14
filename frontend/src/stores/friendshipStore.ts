@@ -2,10 +2,11 @@ import { defineStore } from 'pinia'
 import {
     getFriendships,
     getReceivedFriendRequests,
-    getSentFriendRequests
+    getSentFriendRequests,
+    deleteFriendship
 } from '@/services/friendshipService'
-
 import type { Friendship } from '@/models/Friendship'
+import { useRoomStore } from './roomStore'
 
 export const useFriendshipStore = defineStore('friendship', {
     state: () => ({
@@ -90,6 +91,41 @@ export const useFriendshipStore = defineStore('friendship', {
                 console.error('Erreur lors du chargement des demandes envoyées :', e)
                 this.error = e.response?.data?.message || e.message || 'Erreur inconnue'
             }
+        },
+
+        /**
+        * Supprime une amitié et met à jour la liste locale.
+        */
+        async deleteFriendship(friendshipId: string) {
+            this.isLoading = true
+            const roomStore = useRoomStore()
+
+            try {
+                // 1. Appel à l'API
+                await deleteFriendship(friendshipId)
+
+                // 2. Trouver la relation supprimée AVANT de la retirer
+                const deletedFriendship = this.friendships.find(f => f.id === friendshipId)
+                const friendCode = deletedFriendship?.friend.friendCode
+
+                // 3. Supprimer l’amitié localement
+                this.friendships = this.friendships.filter(f => f.id !== friendshipId)
+
+                // 4. Supprimer aussi la room privée liée à ce friendCode
+                if (friendCode) {
+                    roomStore.privateRooms = roomStore.privateRooms.filter(room =>
+                        !room.members.some(member => member.member.friendCode === friendCode)
+                    )
+                }
+
+            } catch (e: any) {
+                console.error('Erreur lors de la suppression de l’amitié :', e)
+                this.error = e.response?.data?.message || e.message || 'Erreur inconnue'
+                throw e
+            } finally {
+                this.isLoading = false
+            }
         }
+
     }
 })

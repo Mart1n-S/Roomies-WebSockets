@@ -42,9 +42,9 @@
     </div>
 </template>
 
+
 <script setup lang="ts">
 import type { PropType } from 'vue'
-import type { ListItem } from '@/models/ListItem'
 
 const props = defineProps({
     isLoading: {
@@ -52,7 +52,7 @@ const props = defineProps({
         default: false
     },
     items: {
-        type: Array as PropType<ListItem[]>,
+        type: Array as PropType<any[]>,
         required: true
     },
     itemKey: {
@@ -68,13 +68,13 @@ const props = defineProps({
         default: 'Aucun élément à afficher'
     },
     activeId: {
-        type: String,
+        type: [String, Number],
         default: null
     }
 })
 
 const emit = defineEmits<{
-    (e: 'item-click', item: ListItem): void
-    (e: 'item-action', item: ListItem): void
+    (e: 'item-click', item: any): void
+    (e: 'item-action', item: any): void
 }>()
 </script>

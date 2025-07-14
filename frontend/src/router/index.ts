@@ -86,6 +86,14 @@ const routes = [
         meta: {
           title: 'Conversation - Roomies'
         }
+      },
+      {
+        path: 'friends',
+        name: 'friends.list',
+        component: () => import('@/views/FriendsView.vue'),
+        meta: {
+          title: 'Mes amis - Roomies'
+        }
       }
 
     ]

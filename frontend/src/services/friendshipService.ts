@@ -24,3 +24,10 @@ export async function getSentFriendRequests(): Promise<Friendship[]> {
     const res = await axios.get<Friendship[]>('/friendships?filter=sent')
     return res.data
 }
+
+/**
+ * Supprime une amitié existante.
+ */
+export async function deleteFriendship(friendshipId: string): Promise<void> {
+    await axios.delete(`/friendships/${friendshipId}`)
+}

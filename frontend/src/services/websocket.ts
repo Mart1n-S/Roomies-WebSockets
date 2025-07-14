@@ -30,7 +30,7 @@ export async function connectWebSocket(): Promise<WebSocket | null> {
                 token
             }))
 
-            // PING toutes les 30 secondes pour garder la connexion active
+            // PING toutes les 30 sec
             pingInterval = setInterval(() => {
                 if (socket?.readyState === WebSocket.OPEN) {
                     console.log('📡 Ping envoyé au serveur')
@@ -57,10 +57,17 @@ export async function connectWebSocket(): Promise<WebSocket | null> {
             console.log('🔌 WebSocket fermé')
             socket = null
 
+            // Stop le ping
             if (pingInterval) {
                 clearInterval(pingInterval)
                 pingInterval = null
             }
+
+            // Reconnexion auto dans 5 sec
+            setTimeout(() => {
+                console.log('🔁 Tentative de reconnexion WebSocket...')
+                connectWebSocket()
+            }, 1000)
         }
 
         return socket
@@ -77,7 +84,12 @@ export function sendWebSocketMessage(message: any) {
     if (socket?.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify(message))
     } else {
-        console.warn('⚠️ WebSocket non connecté, impossible d’envoyer le message')
+        console.warn('⚠️ WebSocket non connecté, tentative de reconnexion...')
+        connectWebSocket().then(() => {
+            if (socket?.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(message))
+            }
+        })
     }
 }
 

@@ -2,18 +2,20 @@
 
 namespace App\Controller;
 
-use App\Entity\Message;
 use App\Entity\User;
+use App\Entity\Message;
+use App\Entity\Friendship;
 use App\Security\EmailVerifier;
 use App\Repository\RoomRepository;
 use App\Repository\UserRepository;
 use Symfony\Component\Mime\Address;
+use App\Repository\MessageRepository;
 use App\Repository\RoomUserRepository;
+use App\Repository\FriendshipRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\EventListener\UserRegistrationListener;
-use App\Repository\MessageRepository;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Security\Exception\TooManyRequestsException;
@@ -193,7 +195,7 @@ class RegistrationController extends AbstractController
 
         // Trouver les utilisateurs
         $user1 = $userRepository->findOneBy(['email' => 'user@user.com']);
-        $user2 = $userRepository->findOneBy(['email' => 'gpurdy@example.com']);
+        $user2 = $userRepository->findOneBy(['email' => 'turcotte.olin@example.com']);
 
         // Trouver la salle de discussion privée entre les deux utilisateurs
         $room = $roomRepository->findPrivateRoomBetweenUsers($user1, $user2);
@@ -218,5 +220,35 @@ class RegistrationController extends AbstractController
         }
 
         dd($room);
+    }
+    // TODO: a supprimer utiliser pour des test
+    // Creer une route pour creer des amities 
+    #[Route('/test-friendship', name: 'test_friendship')]
+    public function testFriendship(FriendshipRepository $friendshipRepository, UserRepository $userRepository)
+    {
+        // Trouver les utilisateurs
+        $user1 = $userRepository->findOneBy(['email' => 'user@user.com']);
+        $user2 = $userRepository->findOneBy(['email' => 'turcotte.olin@example.com']);
+        $user3 = $userRepository->findOneBy(['email' => 'mohamed40@example.org']);
+        $user4 = $userRepository->findOneBy(['email' => 'douglas.bertrand@example.com']);
+        if (!$user1 || !$user2 || !$user3 || !$user4) {
+            throw new \RuntimeException('Un ou plusieurs utilisateurs non trouvés.');
+        }
+
+        // Créer des amitiés
+        $friendship1 = new Friendship();
+        $friendship1->setApplicant($user2);
+        $friendship1->setRecipient($user1);
+        $friendshipRepository->save($friendship1, true);
+        $friendship2 = new Friendship();
+        $friendship2->setApplicant($user3);
+        $friendship2->setRecipient($user1);
+        $friendshipRepository->save($friendship2, true);
+        $friendship3 = new Friendship();
+        $friendship3->setApplicant($user4);
+        $friendship3->setRecipient($user1);
+        $friendshipRepository->save($friendship3, true);
+
+        dd('Amitiés créées avec succès !');
     }
 }
