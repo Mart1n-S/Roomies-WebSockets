@@ -8,11 +8,11 @@
             Amis
         </BaseButton>
 
-        <BaseButton iconLeft class="justify-start">
+        <BaseButton iconLeft class="justify-start" @click="showModal = true">
             <template #icon-left><i class="pi pi-plus" /></template>
             Nouvelle conversation
         </BaseButton>
-
+        <CreatePrivateChatModalForm v-if="showModal" @close="showModal = false" />
         <hr class="h-[1px] border-roomies-gray1 my-3" />
         <p class="mt-4 text-gray-300">Messages privés</p>
 
@@ -58,6 +58,7 @@ import { useChatStore } from '@/stores/chatStore'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import ItemList from '@/components/UI/ItemList.vue'
+import CreatePrivateChatModalForm from '@/components/form/CreatePrivateChatModalForm.vue'
 import type { Room } from '@/models/Room'
 import type { ListItem } from '@/models/ListItem'
 import { useRouter, useRoute } from 'vue-router'
@@ -68,6 +69,8 @@ const roomStore = useRoomStore()
 const authStore = useAuthStore()
 const chatStore = useChatStore()
 const search = ref('')
+const showModal = ref(false)
+
 
 const activeRoomId = computed(() => route.name === 'private.chat' ? route.params.roomId : null)
 
@@ -129,6 +132,7 @@ function hideRoom(room: ListItem | Room) {
         if (myFriendCode) {
             roomStore.setPrivateRoomVisibility(room.id, false, myFriendCode);
         }
+        router.push({ name: 'home.private' })
     }
 }
 
