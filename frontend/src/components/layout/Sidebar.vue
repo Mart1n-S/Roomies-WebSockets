@@ -70,7 +70,7 @@ const navigateTo = (path: string) => {
 defineEmits(['open-create-modal'])
 
 const dashboardClass = computed(() =>
-    route.path === '/dashboard'
+    route.path.startsWith('/dashboard')
         ? '!bg-roomies-blue !rounded-xl'
         : '!rounded-2xl hover:!rounded-xl'
 )

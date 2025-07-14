@@ -2,15 +2,18 @@
 
 namespace App\Controller;
 
+use App\Entity\Message;
 use App\Entity\User;
 use App\Security\EmailVerifier;
+use App\Repository\RoomRepository;
 use App\Repository\UserRepository;
 use Symfony\Component\Mime\Address;
+use App\Repository\RoomUserRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use App\EventListener\UserRegistrationListener;
-use App\Repository\RoomUserRepository;
+use App\Repository\MessageRepository;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use App\Security\Exception\TooManyRequestsException;
@@ -179,5 +182,41 @@ class RegistrationController extends AbstractController
         }
 
         dd($roomUsers);
+    }
+    // TODO: a supprimer utiliser pour des test
+    #[Route('/test', name: 'intit')]
+    public function test2(
+        UserRepository $userRepository,
+        RoomRepository $roomRepository,
+        MessageRepository $messageRepository
+    ) {
+
+        // Trouver les utilisateurs
+        $user1 = $userRepository->findOneBy(['email' => 'user@user.com']);
+        $user2 = $userRepository->findOneBy(['email' => 'gpurdy@example.com']);
+
+        // Trouver la salle de discussion privée entre les deux utilisateurs
+        $room = $roomRepository->findPrivateRoomBetweenUsers($user1, $user2);
+
+        // Vérifier si les utilisateurs et la salle existent
+        if (!$user1 || !$user2 || !$room) {
+            throw new \RuntimeException('User or room not found.');
+        }
+
+        // Créer plusieurs messages
+        $messages = [];
+        for ($i = 1; $i <= 50; $i++) {
+            $messages[] = (string)$i;
+        }
+
+        foreach ($messages as $content) {
+            $message = new Message();
+            $message->setSender($user1);
+            $message->setRoom($room);
+            $message->setContent($content);
+            $messageRepository->save($message, true);
+        }
+
+        dd($room);
     }
 }

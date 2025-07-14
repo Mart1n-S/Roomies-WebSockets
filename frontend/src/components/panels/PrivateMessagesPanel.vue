@@ -16,7 +16,7 @@
         <hr class="h-[1px] border-roomies-gray1 my-3" />
         <p class="mt-4 text-gray-300">Messages privés</p>
 
-        <ItemList :items="filteredRooms" :is-loading="isLoading" :show-delete-button="true"
+        <ItemList :items="filteredRooms" :is-loading="isLoading" :active-id="activeRoomId" :show-delete-button="true"
             :empty-message="search.length ? 'Aucun résultat, essayez avec un autre pseudo 🥸' : 'Aucune conversation'"
             @item-click="handleRoomClick" @item-action="hideRoom">
             <template #item-content="{ item: room }">
@@ -28,12 +28,21 @@
                         <span v-if="isRoom(room)"
                             class="absolute bottom-0 right-0 w-3 h-3 border-2 rounded-full border-roomies-gray1"
                             :class="getOtherMember(room).member.isOnline ? 'bg-green-500' : 'bg-gray-500'"></span>
+
+                        <!-- Badge de messages non lus -->
+                        <span v-if="isRoom(room) && getUnreadCount(room.id) > 0"
+                            class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 flex items-center justify-center text-xs font-semibold text-white border-2 border-roomies-gray1 bg-roomies-blue rounded-full shadow-md">
+                            {{ getUnreadCount(room.id) }}
+                        </span>
+
                     </div>
+
                     <span v-if="isRoom(room)">
                         {{ getOtherMember(room).member.pseudo || 'Discussion' }}
                     </span>
                     <span v-else>Discussion</span>
                 </div>
+
             </template>
 
         </ItemList>
@@ -45,18 +54,27 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoomStore } from '@/stores/roomStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useUserStatusStore } from '@/stores/userStatusStore'
+import { useChatStore } from '@/stores/chatStore'
 import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import ItemList from '@/components/UI/ItemList.vue'
 import type { Room } from '@/models/Room'
 import type { ListItem } from '@/models/ListItem'
+import { useRouter, useRoute } from 'vue-router'
 
+const router = useRouter()
+const route = useRoute()
 const roomStore = useRoomStore()
 const authStore = useAuthStore()
+const chatStore = useChatStore()
 const search = ref('')
+
+const activeRoomId = computed(() => route.name === 'private.chat' ? route.params.roomId : null)
+
 
 onMounted(() => {
     roomStore.fetchPrivateRooms()
+    chatStore.updateUnreadCounts(roomStore.privateRoomsList, authStore.user!.friendCode)
 })
 
 const isLoading = computed(() => roomStore.isLoading)
@@ -71,6 +89,10 @@ const filteredRooms = computed(() =>
 
 function isRoom(item: ListItem | Room): item is Room {
     return 'isGroup' in item && 'createdAt' in item && 'members' in item;
+}
+
+function getUnreadCount(roomId: string): number {
+    return chatStore.unreadCounts[roomId] || 0
 }
 
 function getOtherMember(room: Room) {
@@ -95,10 +117,9 @@ function getOtherMember(room: Room) {
         }
 }
 
-
 function handleRoomClick(room: ListItem | Room) {
     if (isRoom(room)) {
-        console.log('Room selected:', room);
+        router.push({ name: 'private.chat', params: { roomId: room.id } })
     }
 }
 

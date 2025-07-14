@@ -2,18 +2,14 @@
 
 namespace App\State\Group;
 
-use App\Entity\Room;
 use App\Entity\User;
-use App\Enum\RoomRole;
 use App\Entity\RoomUser;
 use App\Mapper\GroupMapper;
-use App\Dto\User\UserReadDTO;
 use App\Dto\Group\GroupReadDTO;
 use App\Repository\RoomRepository;
 use ApiPlatform\Metadata\Operation;
-use App\Dto\Group\GroupReadMemberDTO;
+use App\Repository\MessageRepository;
 use ApiPlatform\State\ProviderInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
@@ -27,7 +23,8 @@ class GroupReadProvider implements ProviderInterface
     public function __construct(
         private TokenStorageInterface $tokenStorage,
         private RoomRepository $roomRepository,
-        private GroupMapper $groupMapper
+        private GroupMapper $groupMapper,
+        private MessageRepository $messageRepository
     ) {}
 
     /**
@@ -50,7 +47,17 @@ class GroupReadProvider implements ProviderInterface
         foreach ($rooms as $room) {
             $dto = $this->groupMapper->toReadDto($room);
 
-            // Remplace le nom de la discussion privée par le pseudo de l'autre membre
+            // Récupération du RoomUser correspondant à l'utilisateur connecté
+            $roomUser = $room->getMembers()->filter(
+                fn(RoomUser $ru) => $ru->getUser() === $user
+            )->first();
+            // TODO: a retravailler 
+            if ($roomUser) {
+                $unreadCount = $this->messageRepository->countUnreadForRoomUser($roomUser);
+                $dto->unreadCount = $unreadCount;
+            }
+
+            // Pour les discussions privées, on remplace le nom
             if (!$room->isGroup()) {
                 $otherMember = $room->getMembers()->filter(
                     fn(RoomUser $ru) => $ru->getUser() !== $user

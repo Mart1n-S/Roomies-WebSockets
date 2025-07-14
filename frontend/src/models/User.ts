@@ -10,4 +10,5 @@ export interface UserPublic {
     pseudo: string
     avatar: string
     friendCode: string
+    isOnline?: boolean
 }

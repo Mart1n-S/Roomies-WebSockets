@@ -21,4 +21,7 @@ class GroupReadDTO
     #[Groups(['read:group'])]
     /** @var GroupReadMemberDTO[] */
     public array $members = [];
+
+    #[Groups(['read:group'])]
+    public ?int $unreadCount = null;
 }

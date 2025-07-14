@@ -78,9 +78,22 @@ const routes = [
         meta: {
           title: 'Tableau de bord - Roomies'
         }
+      },
+      {
+        path: 'chat/:roomId',
+        name: 'private.chat',
+        component: () => import('@/views/PrivateChatView.vue'),
+        meta: {
+          title: 'Conversation - Roomies'
+        }
       }
+
     ]
   },
+  {
+    path: '/:pathMatch(.*)*',
+    redirect: '/'
+  }
 
 ]
 

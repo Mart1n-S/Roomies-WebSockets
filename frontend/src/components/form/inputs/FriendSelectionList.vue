@@ -98,28 +98,3 @@ function handleCheckboxChange(friendId: string, event: Event) {
     emit('update:selectedFriends', updatedSelection)
 }
 </script>
-
-<style scoped>
-.scrollbar {
-    scrollbar-gutter: stable;
-    overflow-y: auto;
-}
-
-.scrollbar::-webkit-scrollbar {
-    width: 2px;
-}
-
-.scrollbar::-webkit-scrollbar-thumb {
-    background-color: #6b7280;
-    border-radius: 2px;
-}
-
-.scrollbar::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-.scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #6b7280 transparent;
-}
-</style>

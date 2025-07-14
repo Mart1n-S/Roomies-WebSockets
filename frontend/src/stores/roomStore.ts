@@ -3,6 +3,8 @@ import { createGroup, fetchPrivateRooms, patchPrivateRoomVisibility } from '@/se
 import type { Room } from '@/models/Room'
 import { sendWebSocketMessage } from '@/services/websocket'
 import { useToast } from 'vue-toastification'
+import { useAuthStore } from './authStore'
+import { useWebSocketStore } from './wsStore'
 
 export const useRoomStore = defineStore('room', {
     state: () => ({
@@ -126,6 +128,34 @@ export const useRoomStore = defineStore('room', {
                 myMembership.isVisible = previousVisibility
                 this.error = err.response?.data?.message || 'Erreur lors de la modification de la visibilité'
                 toast.error(this.error)
+            }
+        },
+        /**
+         * Met à jour le last seen d'un salon via WebSocket.
+         * @param roomId L'identifiant du salon à mettre à jour.
+         */
+        async updateLastSeen(roomId: string): Promise<void> {
+            const authStore = useAuthStore()
+            const wsStore = useWebSocketStore()
+
+            try {
+                // 1. Envoie une requête WebSocket au backend pour mettre à jour lastSeen
+                wsStore.send({
+                    type: 'update_last_seen',
+                    roomId: roomId
+                })
+
+                // 2. Met à jour immédiatement la valeur locale du lastSeenAt (optimiste)
+                const room = this.privateRooms.find(r => r.id === roomId)
+                const myFriendCode = authStore.user?.friendCode
+                const myMembership = room?.members.find(m => m.member.friendCode === myFriendCode)
+
+                if (myMembership) {
+                    myMembership.lastSeenAt = new Date().toISOString()
+                }
+
+            } catch (error) {
+                console.error('Erreur lors de la mise à jour de lastSeen (WebSocket) :', error)
             }
         }
 

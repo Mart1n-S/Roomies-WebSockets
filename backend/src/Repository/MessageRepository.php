@@ -2,7 +2,8 @@
 
 namespace App\Repository;
 
-// use App\Entity\User;
+use App\Entity\User;
+use Symfony\Component\Uid\Uuid;
 use App\Entity\Message;
 use App\Entity\RoomUser;
 use Doctrine\Persistence\ManagerRegistry;
@@ -53,8 +54,8 @@ class MessageRepository extends ServiceEntityRepository
             ->where('m.room = :room')
             ->andWhere('m.sender != :user') // pour ne pas compter ses propres messages
             ->andWhere('m.createdAt > :lastSeenAt')
-            ->setParameter('room', $roomUser->getRoom())
-            ->setParameter('user', $roomUser->getUser())
+            ->setParameter('room', $roomUser->getRoom()->getId()->toBinary())
+            ->setParameter('user', $roomUser->getUser()->getId()->toBinary())
             ->setParameter('lastSeenAt', $roomUser->getLastSeenAt() ?? new \DateTimeImmutable('1970-01-01'))
             ->getQuery()
             ->getSingleScalarResult();
@@ -77,4 +78,50 @@ class MessageRepository extends ServiceEntityRepository
     //         ->getQuery()
     //         ->execute();
     // }
+
+    /**
+     * Récupère les messages d'une room avec pagination.
+     *
+     * @param string $roomId L'identifiant de la room
+     * @param User $user L'utilisateur pour lequel on récupère les messages
+     * @param int $page Le numéro de page (1 par défaut)
+     * @param int $limit Le nombre de messages par page (40 par défaut)
+     * @return Message[] Les messages paginés
+     */
+    public function findPaginatedByRoomId(string $roomId, User $user, int $page = 1, int $limit = 100): array
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->innerJoin('m.room', 'r')
+            ->innerJoin('r.members', 'ru')
+            ->where('r.id = :roomId')
+            ->andWhere('ru.user = :user')
+            ->orderBy('m.createdAt', 'DESC')
+            ->setParameter('roomId', Uuid::fromString($roomId)->toBinary())
+            ->setParameter('user', $user->getId()->toBinary())
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Compte le nombre total de messages dans une room pour un utilisateur donné.
+     *
+     * @param string $roomId L'identifiant de la room
+     * @param User $user L'utilisateur pour lequel on compte les messages
+     * @return int Le nombre total de messages
+     */
+    public function countMessagesByRoomId(string $roomId, User $user): int
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->innerJoin('m.room', 'r')
+            ->innerJoin('r.members', 'ru')
+            ->where('r.id = :roomId')
+            ->andWhere('ru.user = :user')
+            ->setParameter('roomId', Uuid::fromString($roomId)->toBinary())
+            ->setParameter('user', $user->getId()->toBinary());
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
+    }
 }

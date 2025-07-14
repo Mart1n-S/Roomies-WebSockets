@@ -8,9 +8,10 @@
         <!-- Liste -->
         <template v-else>
             <template v-if="items.length">
-                <div v-for="item in items" :key="itemKey ? item[itemKey] : item.id"
-                    class="relative flex items-center justify-between p-2 rounded cursor-pointer group hover:bg-roomies-gray2"
-                    @click="$emit('item-click', item)">
+                <div v-for="item in items" :key="itemKey ? item[itemKey] : item.id" :class="[
+                    'group relative flex items-center justify-between p-2 rounded cursor-pointer hover:bg-roomies-gray2',
+                    item.id === activeId ? 'bg-roomies-gray2' : ''
+                ]" @click="$emit('item-click', item)">
                     <!-- Slot personnalisable pour le contenu -->
                     <slot name="item-content" :item="item">
                         <div class="flex items-center space-x-2">
@@ -65,6 +66,10 @@ const props = defineProps({
     emptyMessage: {
         type: String,
         default: 'Aucun élément à afficher'
+    },
+    activeId: {
+        type: String,
+        default: null
     }
 })
 
@@ -73,30 +78,3 @@ const emit = defineEmits<{
     (e: 'item-action', item: ListItem): void
 }>()
 </script>
-
-
-
-<style scoped>
-.scrollbar {
-    scrollbar-gutter: stable;
-    overflow-y: auto;
-}
-
-.scrollbar::-webkit-scrollbar {
-    width: 2px;
-}
-
-.scrollbar::-webkit-scrollbar-thumb {
-    background-color: #6b7280;
-    border-radius: 2px;
-}
-
-.scrollbar::-webkit-scrollbar-track {
-    background-color: transparent;
-}
-
-.scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #6b7280 transparent;
-}
-</style>

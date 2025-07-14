@@ -6,10 +6,11 @@ use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use App\WebSocket\Router\MessageRouter;
 use App\Security\WebSocketAuthenticator;
-use App\WebSocket\Connection\ConnectionRegistry;
-use App\State\Websocket\Group\GroupReadProvider;
-use Symfony\Component\Serializer\SerializerInterface;
 use App\WebSocket\Handler\UserStatusHandler;
+use App\State\Websocket\Group\GroupReadProvider;
+use App\WebSocket\Connection\ConnectionRegistry;
+use Symfony\Component\Serializer\SerializerInterface;
+use App\State\WebSocket\Group\PrivateRoomReadProvider;
 
 
 class WebSocketServer implements MessageComponentInterface
@@ -19,6 +20,7 @@ class WebSocketServer implements MessageComponentInterface
         private readonly WebSocketAuthenticator $authenticator,
         private readonly ConnectionRegistry $registry,
         private readonly GroupReadProvider $groupReadProvider,
+        private readonly PrivateRoomReadProvider $privateRoomReadProvider,
         private readonly SerializerInterface $serializer,
         private readonly UserStatusHandler $userStatusHandler
     ) {}
@@ -82,6 +84,18 @@ class WebSocketServer implements MessageComponentInterface
                 $from->send(json_encode([
                     'type' => 'init_groups',
                     'data' => json_decode($json, true),
+                ]));
+
+                // Envoi des discussions privées
+                $privateRooms = $this->privateRoomReadProvider->getPrivateRoomsForUser($user);
+
+                $privateJson = $this->serializer->serialize($privateRooms, 'json', [
+                    'groups' => ['read:group'],
+                ]);
+
+                $from->send(json_encode([
+                    'type' => 'init_private_rooms',
+                    'data' => json_decode($privateJson, true),
                 ]));
             } catch (\Throwable $e) {
                 $from->send(json_encode([

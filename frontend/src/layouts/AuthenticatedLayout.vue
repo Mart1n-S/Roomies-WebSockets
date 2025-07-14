@@ -39,7 +39,8 @@ const openCreateModal = () => {
 }
 
 onMounted(() => {
-    if (route.path === '/dashboard') {
+    // Affiche le panneau latéral si on est sur le dashboard ou dans une conversation privée
+    if (route.path.startsWith('/dashboard')) {
         contextPanel.showPrivateMessagesPanel()
     }
 })

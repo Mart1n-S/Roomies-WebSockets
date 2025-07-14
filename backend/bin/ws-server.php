@@ -13,6 +13,7 @@ use App\WebSocket\Connection\ConnectionRegistry;
 use App\State\Websocket\Group\GroupReadProvider;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\WebSocket\Handler\UserStatusHandler;
+use App\State\WebSocket\Group\PrivateRoomReadProvider;
 
 use React\Socket\SocketServer;
 use React\Socket\SecureServer;
@@ -54,6 +55,7 @@ $authenticator = $container->get(WebSocketAuthenticator::class);
 $router = $container->get(MessageRouter::class);
 $registry = $container->get(ConnectionRegistry::class);
 $groupReadProvider = $container->get(GroupReadProvider::class);
+$privateRoomReadProvider = $container->get(PrivateRoomReadProvider::class);
 $serializer = $container->get(SerializerInterface::class);
 $userStatusHandler = $container->get(UserStatusHandler::class);
 
@@ -75,6 +77,7 @@ $httpServer = new HttpServer(
             $authenticator,
             $registry,
             $groupReadProvider,
+            $privateRoomReadProvider,
             $serializer,
             $userStatusHandler
         )

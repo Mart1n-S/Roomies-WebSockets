@@ -12,12 +12,12 @@ final class UserReadDTO
     #[Groups(['read:me'])]
     public ?array $roles = null;
 
-    #[Groups(['read:me', 'read:user', 'read:friendship', 'read:group'])]
+    #[Groups(['read:me', 'read:user', 'read:friendship', 'read:group', 'read:message'])]
     public ?string $pseudo = null;
 
-    #[Groups(['read:me', 'read:user', 'read:friendship', 'read:group'])]
+    #[Groups(['read:me', 'read:user', 'read:friendship', 'read:group', 'read:message'])]
     public ?string $avatar = null;
 
-    #[Groups(['read:me', 'read:user', 'read:friendship', 'read:group'])]
+    #[Groups(['read:me', 'read:user', 'read:friendship', 'read:group', 'read:message'])]
     public ?string $friendCode = null;
 }

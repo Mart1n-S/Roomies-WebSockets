@@ -8,6 +8,7 @@ import {
 import { useRoomStore } from './roomStore'
 import { useToast } from 'vue-toastification'
 import { useUserStatusStore } from './userStatusStore'
+import { useChatStore } from './chatStore'
 
 export const useWebSocketStore = defineStore('ws', {
     state: () => ({
@@ -44,6 +45,20 @@ export const useWebSocketStore = defineStore('ws', {
                 roomStore.setRooms(data.data)
             }
 
+            if (data.type === 'init_private_rooms') {
+                const roomStore = useRoomStore()
+                const chatStore = useChatStore()
+
+                roomStore.setPrivateRooms(data.data)
+                chatStore.setUnreadCountsFromServer(data.data)
+            }
+
+            if (data.type === 'room_unread_updated') {
+                const chatStore = useChatStore()
+                chatStore.setUnreadCount(data.roomId, data.unreadCount)
+            }
+
+
             if (data.type === 'room_created') {
                 const roomStore = useRoomStore()
                 roomStore.addRoom(data.room)
@@ -67,6 +82,23 @@ export const useWebSocketStore = defineStore('ws', {
                 const userStatusStore = useUserStatusStore()
                 data.onlineFriends.forEach((code: string) => userStatusStore.setUserOnline(code))
             }
+
+            if (data.type === 'message') {
+                const chatStore = useChatStore()
+                chatStore.appendMessages(data.roomId, [data.message])
+            }
+
+            if (data.type === 'new_message') {
+                const chatStore = useChatStore()
+                chatStore.appendMessages(data.message.roomId, [data.message])
+
+                const activeRoomId = window?.location?.pathname?.split('/').pop()
+                if (activeRoomId !== data.message.roomId) {
+                    chatStore.incrementUnreadCount(data.message.roomId)
+                }
+            }
+
+
 
             if (data.type === 'error') {
                 console.warn('Erreur WebSocket reçue :', data.message)
