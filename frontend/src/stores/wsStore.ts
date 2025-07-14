@@ -10,6 +10,7 @@ import { useToast } from 'vue-toastification'
 import { useUserStatusStore } from './userStatusStore'
 import { useChatStore } from './chatStore'
 import { useFriendshipStore } from './friendshipStore'
+import { useAuthStore } from './authStore'
 
 export const useWebSocketStore = defineStore('ws', {
     state: () => ({
@@ -102,18 +103,47 @@ export const useWebSocketStore = defineStore('ws', {
             if (data.type === 'friendship_updated') {
                 const roomStore = useRoomStore()
                 const friendshipStore = useFriendshipStore()
+                const userStatusStore = useUserStatusStore()
+                const wsStore = useWebSocketStore()
+                const authStore = useAuthStore()
 
-                // 1) Ajoute la relation confirmée
-                friendshipStore.friendships.push(data.friendship)
+                const currentUserCode = authStore.user?.friendCode
+                const rawFriendship = data.friendship
 
-                // 2) Réinitialise la demande envoyée correspondante
+                // 🛠 Corrige le champ .friend si c’est toi
+                if (rawFriendship.friend.friendCode === currentUserCode) {
+                    const otherMember = data.room.members.find(
+                        m => m.member.friendCode !== currentUserCode
+                    )
+                    if (otherMember) {
+                        rawFriendship.friend = otherMember.member
+                    }
+                }
+
+                // 1) Ajoute la relation corrigée
+                friendshipStore.friendships.push(rawFriendship)
+
+                // 2) Supprime la demande envoyée si présente
                 friendshipStore.sentRequests = friendshipStore.sentRequests.filter(
-                    f => f.id !== data.friendship.id
+                    f => f.id !== rawFriendship.id
                 )
 
-                // 3) Ajoute la nouvelle room privée
+                // 3) Ajoute la room privée
                 roomStore.privateRooms.push(data.room)
+
+                // 4) Rafraîchit le statut en ligne de l’ami
+                const friendCode = rawFriendship.friend.friendCode
+                if (!userStatusStore.isOnline(friendCode)) {
+                    wsStore.send({
+                        type: 'request_status',
+                        payload: {
+                            friendCodes: [friendCode]
+                        }
+                    })
+                }
             }
+
+
 
             if (data.type === 'friendship_deleted') {
                 const friendshipStore = useFriendshipStore()
