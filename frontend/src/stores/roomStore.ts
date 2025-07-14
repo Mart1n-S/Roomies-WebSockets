@@ -168,8 +168,16 @@ export const useRoomStore = defineStore('room', {
                     room.isGroup || // garde les groupes
                     !room.members.some(member => member.member.friendCode === friendCode)
             )
-        }
+        },
 
+        /**
+         * Méthode pour supprimer un salon privé par son ID.
+         * Utile pour les salons privés où l'utilisateur n'est plus membre.
+         * @param roomId 
+         */
+        removePrivateRoom(roomId: string) {
+            this.privateRooms = this.privateRooms.filter(r => r.id !== roomId)
+        }
 
     },
 

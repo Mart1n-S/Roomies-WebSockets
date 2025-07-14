@@ -11,6 +11,8 @@ import { useUserStatusStore } from './userStatusStore'
 import { useChatStore } from './chatStore'
 import { useFriendshipStore } from './friendshipStore'
 import { useAuthStore } from './authStore'
+import { router } from '@/router'
+
 
 export const useWebSocketStore = defineStore('ws', {
     state: () => ({
@@ -176,7 +178,25 @@ export const useWebSocketStore = defineStore('ws', {
             }
 
             if (data.type === 'error') {
+                const toast = useToast()
+                const roomStore = useRoomStore()
+
                 console.warn('Erreur WebSocket reçue :', data.message)
+
+                if (
+                    typeof data.message === 'string' &&
+                    data.message.includes('Tu ne fais pas partie de cette room')
+                ) {
+                    // Extraire l’ID de la room si c’est possible via l’URL
+                    const currentRoomId = window?.location?.pathname?.split('/').pop()
+                    if (currentRoomId) {
+                        roomStore.removePrivateRoom(currentRoomId)
+                        toast.info('Cette discussion n’est plus disponible.')
+                        router.push('/dashboard')
+                    }
+                } else {
+                    toast.error(data.message || 'Erreur inattendue.')
+                }
             }
         },
 
