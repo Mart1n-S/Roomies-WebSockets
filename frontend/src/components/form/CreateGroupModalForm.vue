@@ -67,7 +67,7 @@ onMounted(() => {
 
 // Vérifie si on doit rafraîchir la liste
 const shouldRefreshFriends = computed(() => {
-    return friendshipStore.friendships.length === 0 ||
+    return !friendshipStore.hasFetchedFriendships ||
         (friendshipStore.lastUpdated &&
             (Date.now() - friendshipStore.lastUpdated) > 300000)
 })

@@ -18,7 +18,8 @@ export const useFriendshipStore = defineStore('friendship', {
         sentRequests: [] as Friendship[],
         isLoading: false,
         error: null as string | null,
-        lastUpdated: null as number | null
+        lastUpdated: null as number | null,
+        hasFetchedFriendships: false,
     }),
 
     getters: {
@@ -56,19 +57,17 @@ export const useFriendshipStore = defineStore('friendship', {
          */
         async fetchFriendships() {
             if (this.isLoading) return
-
             this.isLoading = true
             this.error = null
             try {
                 const data = await getFriendships()
                 this.friendships = data
-                this.lastUpdated = Date.now() // Met à jour le timestamp
             } catch (e: any) {
-                console.error('Erreur lors du chargement des amitiés :', e)
                 this.error = e.response?.data?.message || e.message || 'Erreur inconnue'
-                throw e // Propage l'erreur pour la gestion dans les composants
             } finally {
                 this.isLoading = false
+                this.hasFetchedFriendships = true
+                this.lastUpdated = Date.now()
             }
         },
 
