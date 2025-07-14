@@ -84,6 +84,8 @@
             message="Souhaites-tu vraiment refuser cette demande d’ami ?" :onConfirm="confirmRejectRequest"
             @close="showRejectModal = false" />
 
+        <AddFriendModalForm v-if="showAddModal" @close="showAddModal = false" />
+
     </div>
 </template>
 
@@ -94,6 +96,7 @@ import BaseInput from '@/components/base/BaseInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ItemList from '@/components/UI/ItemList.vue'
 import ConfirmDeleteModal from '@/components/base/ConfirmDeleteModal.vue'
+import AddFriendModalForm from '@/components/form/AddFriendModalForm.vue'
 import { useFriendshipStore } from '@/stores/friendshipStore'
 import { useUserStatusStore } from '@/stores/userStatusStore'
 import { useWebSocketStore } from '@/stores/wsStore'

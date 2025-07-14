@@ -3,7 +3,9 @@
 namespace App\WebSocket\Handler;
 
 use App\Dto\Friendship\FriendshipCreateDTO;
+use App\Repository\UserRepository;
 use App\State\Friendship\FriendshipCreateProcessor;
+use App\WebSocket\Connection\ConnectionRegistry;
 use App\WebSocket\Contract\WebSocketHandlerInterface;
 use Ratchet\ConnectionInterface;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -13,7 +15,9 @@ class FriendshipHandler implements WebSocketHandlerInterface
 {
     public function __construct(
         private readonly FriendshipCreateProcessor $friendshipProcessor,
-        private readonly SerializerInterface $serializer
+        private readonly SerializerInterface $serializer,
+        private readonly ConnectionRegistry $connectionRegistry,
+        private readonly UserRepository $userRepository
     ) {}
 
     public function supports(string $type): bool
@@ -38,12 +42,30 @@ class FriendshipHandler implements WebSocketHandlerInterface
 
             $dtoOut = $this->friendshipProcessor->process($dto, $conn->user);
 
-            $json = $this->serializer->serialize($dtoOut, 'json', ['groups' => ['read:friendship']]);
+            $jsonData = $this->serializer->serialize($dtoOut, 'json', ['groups' => ['read:friendship']]);
+            $decodedData = json_decode($jsonData, true);
 
+            // 1. Envoi à l’émetteur de la demande (moi)
             $conn->send(json_encode([
                 'type' => 'friend_request_success',
-                'data' => json_decode($json, true),
+                'data' => $decodedData,
             ]));
+
+            // 2. Envoi au destinataire (si connecté)
+            $recipient = $dtoOut->friend;
+            $friendCode = $recipient->friendCode ?? null;
+
+            $targetUser = $this->connectionRegistry->getUserByFriendCode($friendCode);
+            if ($targetUser) {
+                $targetConn = $this->connectionRegistry->getConnection($targetUser->getId());
+
+                if ($targetConn) {
+                    $targetConn->send(json_encode([
+                        'type' => 'friend_request_received',
+                        'data' => $decodedData,
+                    ]));
+                }
+            }
         } catch (\Throwable $e) {
             $conn->send(json_encode([
                 'type' => 'friend_request_error',

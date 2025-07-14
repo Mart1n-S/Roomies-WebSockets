@@ -103,10 +103,15 @@ export const useWebSocketStore = defineStore('ws', {
                 const roomStore = useRoomStore()
                 const friendshipStore = useFriendshipStore()
 
-                // Ajoute l'amitié
+                // 1) Ajoute la relation confirmée
                 friendshipStore.friendships.push(data.friendship)
 
-                // Ajoute la room dans privateRooms (pas dans rooms)
+                // 2) Réinitialise la demande envoyée correspondante
+                friendshipStore.sentRequests = friendshipStore.sentRequests.filter(
+                    f => f.id !== data.friendship.id
+                )
+
+                // 3) Ajoute la nouvelle room privée
                 roomStore.privateRooms.push(data.room)
             }
 
@@ -124,8 +129,21 @@ export const useWebSocketStore = defineStore('ws', {
                 )
             }
 
+            if (data.type === 'friend_request_success') {
+                const friendshipStore = useFriendshipStore()
+                friendshipStore.sentRequests.push(data.data)
 
+                const toast = useToast()
+                toast.success('Demande d’ami envoyée avec succès !')
+            }
 
+            if (data.type === 'friend_request_received') {
+                const friendshipStore = useFriendshipStore()
+                friendshipStore.receivedRequests.push(data.data)
+
+                const toast = useToast()
+                toast.info(`${data.data.friend.pseudo} vous a envoyé une demande d’ami`)
+            }
 
             if (data.type === 'error') {
                 console.warn('Erreur WebSocket reçue :', data.message)
