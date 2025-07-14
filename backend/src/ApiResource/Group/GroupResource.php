@@ -12,10 +12,12 @@ use App\Dto\Group\GroupAddMemberDTO;
 use ApiPlatform\Metadata\ApiResource;
 use App\State\Group\GroupReadProvider;
 use ApiPlatform\Metadata\GetCollection;
+use App\Dto\Group\GroupLastSeenPatchDTO;
 use App\State\Group\GroupCreateProcessor;
 use App\Dto\Group\GroupMemberRolePatchDTO;
 use ApiPlatform\Doctrine\Orm\State\Options;
 use App\State\Group\GroupAddMemberProcessor;
+use App\State\Group\GroupLastSeenPatchProcessor;
 use App\State\Group\GroupMemberRolePatchProcessor;
 use App\Dto\Group\GroupPrivateChatVisibilityPatchDTO;
 use App\State\Group\GroupPrivateChatVisibilityPatchProcessor;
@@ -410,7 +412,53 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                     ]
                 ]
             )
-        )
+        ),
+        // TODO: A supprimer
+        new Patch(
+            uriTemplate: '/groups/{id}/last-seen',
+            input: GroupLastSeenPatchDTO::class,
+            processor: GroupLastSeenPatchProcessor::class,
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            openapi: new Model\Operation(
+                summary: 'Mettre à jour la dernière visite de la discussion',
+                description: 'Mise à jour du champ lastSeenAt de l’utilisateur dans un groupe',
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/merge-patch+json' => new Model\MediaType(
+                            schema: new \ArrayObject([
+                                'type' => 'object',
+                                'properties' => [
+                                    'lastSeenAt' => [
+                                        'type' => 'string',
+                                        'format' => 'date-time',
+                                        'example' => '2025-07-14T15:30:00+00:00'
+                                    ]
+                                ]
+                            ])
+                        )
+                    ])
+                ),
+                responses: [
+                    '200' => [
+                        'description' => 'Dernière visite mise à jour',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'message' => [
+                                            'type' => 'string',
+                                            'example' => 'Dernière visite mise à jour'
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            )
+        ),
+
     ]
 )]
 final class GroupResource {}

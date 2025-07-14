@@ -33,3 +33,19 @@ export async function patchPrivateRoomVisibility(roomUserId: string, isVisible: 
         }
     )
 }
+
+/**
+ * TODO: A supprimer
+ * Met à jour le last seen d'un groupe.
+ * @param groupId L'identifiant du groupe à mettre à jour.
+ */
+export function updateRoomLastSeen(groupId: string) {
+    return axios.patch(`/groups/${groupId}/last-seen`, {
+        lastSeenAt: new Date().toISOString()
+    },
+        {
+            headers: {
+                'Content-Type': 'application/merge-patch+json'
+            }
+        })
+}
