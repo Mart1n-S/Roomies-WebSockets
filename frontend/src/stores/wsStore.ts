@@ -113,7 +113,7 @@ export const useWebSocketStore = defineStore('ws', {
                 // 🛠 Corrige le champ .friend si c’est toi
                 if (rawFriendship.friend.friendCode === currentUserCode) {
                     const otherMember = data.room.members.find(
-                        m => m.member.friendCode !== currentUserCode
+                        (m: { member: { friendCode: string } }) => m.member.friendCode !== currentUserCode
                     )
                     if (otherMember) {
                         rawFriendship.friend = otherMember.member
