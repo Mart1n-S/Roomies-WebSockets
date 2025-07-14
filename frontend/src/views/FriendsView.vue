@@ -38,12 +38,17 @@
                 <div class="flex items-center space-x-3">
                     <div class="relative w-8 h-8">
                         <img :src="item.friend.avatar" alt="avatar" class="w-8 h-8 rounded-full" />
-                        <span class="absolute bottom-0 right-0 w-3 h-3 border-2 rounded-full border-roomies-gray4"
+
+                        <!-- Affiche la pastille uniquement en vue 'friends' -->
+                        <span v-if="currentView === 'friends'"
+                            class="absolute bottom-0 right-0 w-3 h-3 border-2 rounded-full border-roomies-gray4"
                             :class="userStatusStore.isOnline(item.friend.friendCode) ? 'bg-green-500' : 'bg-gray-500'" />
                     </div>
                     <div>
                         <p class="font-medium">{{ item.friend.pseudo }}</p>
-                        <p class="text-xs font-medium"
+
+                        <!-- Affiche le texte En ligne / Hors ligne uniquement en vue 'friends' -->
+                        <p v-if="currentView === 'friends'" class="text-xs font-medium"
                             :class="userStatusStore.isOnline(item.friend.friendCode) ? 'text-green-400' : 'text-gray-400'">
                             {{ userStatusStore.isOnline(item.friend.friendCode) ? 'En ligne' : 'Hors ligne' }}
                         </p>
