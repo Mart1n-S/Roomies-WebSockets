@@ -11,7 +11,14 @@
             <BaseButton :variant="currentView === 'friends' ? 'primary' : 'secondary'" @click="currentView = 'friends'">
                 Amis</BaseButton>
             <BaseButton :variant="currentView === 'received' ? 'primary' : 'secondary'"
-                @click="currentView = 'received'">Demandes reçues</BaseButton>
+                @click="currentView = 'received'" class="relative">
+                Demandes reçues
+                <span v-if="unreadReceivedCount > 0"
+                    class="absolute top-0 right-0 flex items-center justify-center w-5 h-5 -mt-1 -mr-1 text-xs font-bold text-white bg-red-500 rounded-full">
+                    {{ unreadReceivedCount }}
+                </span>
+            </BaseButton>
+
             <BaseButton :variant="currentView === 'sent' ? 'primary' : 'secondary'" @click="currentView = 'sent'">
                 Demandes envoyées</BaseButton>
         </div>
@@ -82,7 +89,7 @@
 
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ItemList from '@/components/UI/ItemList.vue'
@@ -106,15 +113,25 @@ const friendToDelete = ref<Friendship | null>(null)
 const showRejectModal = ref(false)
 const requestToReject = ref<Friendship | null>(null)
 const acceptingId = ref<string | null>(null)
+const unreadReceivedCount = ref(0)
 
 
 // Vue active : amis | reçues | envoyées
 const currentView = ref<'friends' | 'received' | 'sent'>('friends')
 
-onMounted(() => {
-    friendshipStore.fetchFriendships()
-    friendshipStore.fetchReceivedRequests()
-    friendshipStore.fetchSentRequests()
+onMounted(async () => {
+    await friendshipStore.fetchFriendships()
+    await friendshipStore.fetchReceivedRequests()
+    await friendshipStore.fetchSentRequests()
+
+    // Maintenant la donnée est bien à jour
+    unreadReceivedCount.value = friendshipStore.pendingReceived.length
+})
+
+watch(currentView, (newView) => {
+    if (newView === 'received') {
+        unreadReceivedCount.value = 0
+    }
 })
 
 const displayedList = computed(() => {
