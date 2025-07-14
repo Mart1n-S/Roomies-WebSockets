@@ -5,7 +5,6 @@ namespace App\State\Friendship;
 use App\Entity\User;
 use App\Entity\Friendship;
 use App\Enum\FriendshipStatus;
-use App\Mapper\FriendshipMapper;
 use ApiPlatform\Metadata\Operation;
 use App\Service\RoomFactoryService;
 use App\Repository\FriendshipRepository;
@@ -13,6 +12,7 @@ use ApiPlatform\State\ProcessorInterface;
 use App\Dto\Friendship\FriendshipPatchDTO;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use ApiPlatform\Doctrine\Common\State\PersistProcessor;
+use App\Mapper\FriendshipWithRoomMapper;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -30,7 +30,7 @@ final class FriendshipPatchProcessor implements ProcessorInterface
         private TokenStorageInterface $tokenStorage,
         private FriendshipRepository $friendshipRepository,
         private NormalizerInterface $normalizer,
-        private FriendshipMapper $friendshipTransformer,
+        private FriendshipWithRoomMapper $friendshipWithRoomMapper,
         private RoomFactoryService $roomFactoryService,
     ) {}
 
@@ -81,7 +81,11 @@ final class FriendshipPatchProcessor implements ProcessorInterface
             // 2. Création de la Room privée
             $this->roomFactoryService->createRoom(false, $friendship->getApplicant(), [$friendship->getRecipient()]);
 
-            return new JsonResponse($this->normalizer->normalize($this->friendshipTransformer->toReadDto($friendship, $user), null, ['groups' => ['read:friendship']]), JsonResponse::HTTP_OK);
+            return new JsonResponse($this->normalizer->normalize(
+                $this->friendshipWithRoomMapper->toReadDto($friendship, $user),
+                null,
+                ['groups' => ['read:friendshipWithRoom']]
+            ), JsonResponse::HTTP_OK);
         }
 
         // Si refusé, on supprime l'entité

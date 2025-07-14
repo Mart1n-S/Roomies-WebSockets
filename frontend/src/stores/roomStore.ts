@@ -157,6 +157,17 @@ export const useRoomStore = defineStore('room', {
             } catch (error) {
                 console.error('Erreur lors de la mise à jour de lastSeen (WebSocket) :', error)
             }
+        },
+        /**
+         * Supprime un salon privé en fonction de son ID.
+         * @param roomId L'identifiant du salon à supprimer.
+         */
+        removePrivateRoomByFriendCode(friendCode: string) {
+            this.privateRooms = this.privateRooms.filter(
+                room =>
+                    room.isGroup || // garde les groupes
+                    !room.members.some(member => member.member.friendCode === friendCode)
+            )
         }
 
 

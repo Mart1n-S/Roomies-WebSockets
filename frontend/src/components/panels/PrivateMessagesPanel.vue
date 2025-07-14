@@ -4,7 +4,7 @@
             placeholder="Tapez un pseudo..." type="text" />
 
         <BaseButton iconLeft class="justify-start" @click="router.push({ name: 'friends.list' })">
-            <template #icon-left><i class="pi pi-user" /></template>
+            <template #icon-left><i class="pi pi-users" /></template>
             Amis
         </BaseButton>
 

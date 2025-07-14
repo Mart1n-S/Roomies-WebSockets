@@ -2,44 +2,70 @@
     <div class="flex flex-col h-full p-4 space-y-4 text-white">
         <!-- Top bar -->
         <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold">Amis ·</h2>
+            <h2 class="text-xl font-semibold"><i class="pi pi-users" /> Amis</h2>
             <BaseButton @click="showAddModal = true">Ajouter</BaseButton>
+        </div>
+
+        <!-- Switch entre les vues -->
+        <div class="flex items-center gap-2">
+            <BaseButton :variant="currentView === 'friends' ? 'primary' : 'secondary'" @click="currentView = 'friends'">
+                Amis</BaseButton>
+            <BaseButton :variant="currentView === 'received' ? 'primary' : 'secondary'"
+                @click="currentView = 'received'">Demandes reçues</BaseButton>
+            <BaseButton :variant="currentView === 'sent' ? 'primary' : 'secondary'" @click="currentView = 'sent'">
+                Demandes envoyées</BaseButton>
         </div>
 
         <!-- Search input -->
         <BaseInput name="search-friends" label="Rechercher" v-model="search" autocomplete="off" placeholder="Rechercher"
             type="text" />
 
-        <!-- Nombre d'amis -->
-        <p class="text-sm text-gray-400">{{ filteredFriends.length }} amis</p>
+        <!-- Nombre d'éléments -->
+        <p class="text-sm text-gray-400">{{ displayedList.length }} {{ currentLabel }}</p>
 
-        <!-- Liste des amis (statique pour cette étape) -->
-        <ItemList :items="filteredFriends" :is-loading="friendshipStore.isLoading" itemKey="id"
-            :empty-message="search.length ? 'Aucun résultat…' : 'Aucun ami disponible'">
-
-            <template #item-content="{ item: friend }">
+        <!-- Liste -->
+        <ItemList :items="displayedList" :is-loading="friendshipStore.isLoading" itemKey="id"
+            :empty-message="search.length ? 'Aucun résultat…' : emptyLabel">
+            <!-- Affichage commun à tous les modes -->
+            <template #item-content="{ item }">
                 <div class="flex items-center space-x-3">
-                    <!-- <img :src="friend.friend.avatar" alt="avatar" class="w-8 h-8 rounded-full" /> -->
                     <div class="relative w-8 h-8">
-                        <img :src="friend.friend.avatar" alt="avatar" class="w-8 h-8 rounded-full" />
+                        <img :src="item.friend.avatar" alt="avatar" class="w-8 h-8 rounded-full" />
                         <span class="absolute bottom-0 right-0 w-3 h-3 border-2 rounded-full border-roomies-gray4"
-                            :class="userStatusStore.isOnline(friend.friend.friendCode) ? 'bg-green-500' : 'bg-gray-500'" />
+                            :class="userStatusStore.isOnline(item.friend.friendCode) ? 'bg-green-500' : 'bg-gray-500'" />
                     </div>
                     <div>
-                        <p class="font-medium">{{ friend.friend.pseudo }}</p>
+                        <p class="font-medium">{{ item.friend.pseudo }}</p>
                         <p class="text-xs font-medium"
-                            :class="userStatusStore.isOnline(friend.friend.friendCode) ? 'text-green-400' : 'text-gray-400'">
-                            {{ userStatusStore.isOnline(friend.friend.friendCode) ? 'En ligne' : 'Hors ligne' }}
+                            :class="userStatusStore.isOnline(item.friend.friendCode) ? 'text-green-400' : 'text-gray-400'">
+                            {{ userStatusStore.isOnline(item.friend.friendCode) ? 'En ligne' : 'Hors ligne' }}
                         </p>
-
                     </div>
                 </div>
             </template>
 
-            <template #item-action="{ item: friend }">
-                <button class="text-red-500 hover:text-red-600" @click.stop="openConfirmModal(friend)">
-                    <i class="pi pi-trash" />
-                </button>
+            <!-- Action en fonction du mode -->
+            <template #item-action="{ item }">
+                <template v-if="currentView === 'friends'">
+                    <button class="text-red-500 hover:text-red-600" @click.stop="openConfirmModal(item)">
+                        <i class="pi pi-trash" />
+                    </button>
+                </template>
+
+                <template v-else-if="currentView === 'received'">
+                    <div class="flex gap-2">
+                        <BaseButton variant="primary" size="sm" :loading="acceptingId === item.id"
+                            @click="acceptRequest(item.id)">
+                            Accepter
+                        </BaseButton>
+                        <BaseButton variant="danger" size="sm" @click="openRejectModal(item)">Refuser</BaseButton>
+                    </div>
+                </template>
+
+
+                <template v-else-if="currentView === 'sent'">
+                    <span class="text-sm italic text-orange-300">En attente</span>
+                </template>
             </template>
         </ItemList>
 
@@ -47,47 +73,86 @@
             message="Êtes-vous sûr de vouloir supprimer cet ami ? Cette action est irréversible."
             :onConfirm="confirmDeleteFriend" @close="showConfirmModal = false" />
 
+        <ConfirmDeleteModal v-if="showRejectModal" title="Refuser cette demande ?"
+            message="Souhaites-tu vraiment refuser cette demande d’ami ?" :onConfirm="confirmRejectRequest"
+            @close="showRejectModal = false" />
 
     </div>
-
-
 </template>
+
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ItemList from '@/components/UI/ItemList.vue'
 import ConfirmDeleteModal from '@/components/base/ConfirmDeleteModal.vue'
 import { useFriendshipStore } from '@/stores/friendshipStore'
 import { useUserStatusStore } from '@/stores/userStatusStore'
+import { useRoomStore } from '@/stores/roomStore'
 import type { Friendship } from '@/models/Friendship'
 import { useToast } from 'vue-toastification'
 
 const friendshipStore = useFriendshipStore()
 const userStatusStore = useUserStatusStore()
+const router = useRouter()
+const toast = useToast()
 
 const search = ref('')
 const showAddModal = ref(false)
-const toast = useToast()
-
 const showConfirmModal = ref(false)
 const friendToDelete = ref<Friendship | null>(null)
+const showRejectModal = ref(false)
+const requestToReject = ref<Friendship | null>(null)
+const acceptingId = ref<string | null>(null)
+
+
+// Vue active : amis | reçues | envoyées
+const currentView = ref<'friends' | 'received' | 'sent'>('friends')
 
 onMounted(() => {
-    if (friendshipStore.friendUsers.length === 0) {
-        friendshipStore.fetchFriendships()
+    friendshipStore.fetchFriendships()
+    friendshipStore.fetchReceivedRequests()
+    friendshipStore.fetchSentRequests()
+})
+
+const displayedList = computed(() => {
+    const query = search.value.toLowerCase()
+    switch (currentView.value) {
+        case 'received':
+            return friendshipStore.receivedRequests.filter(f =>
+                f.friend.pseudo.toLowerCase().includes(query)
+            )
+        case 'sent':
+            return friendshipStore.sentRequests.filter(f =>
+                f.friend.pseudo.toLowerCase().includes(query)
+            )
+        default:
+            return friendshipStore.friendships.filter(f =>
+                f.friend.pseudo.toLowerCase().includes(query)
+            )
     }
 })
 
-const filteredFriends = computed(() => {
-    return friendshipStore.friendships.filter(f =>
-        f.friend.pseudo.toLowerCase().includes(search.value.toLowerCase())
-    )
+const currentLabel = computed(() => {
+    switch (currentView.value) {
+        case 'received': return 'demandes reçues'
+        case 'sent': return 'demandes envoyées'
+        default: return 'amis'
+    }
 })
 
+const emptyLabel = computed(() => {
+    switch (currentView.value) {
+        case 'received': return 'Aucune demande reçue'
+        case 'sent': return 'Aucune demande envoyée'
+        default: return 'Aucun ami disponible'
+    }
+})
+
+// Suppression d'ami
 function openConfirmModal(friend: Friendship) {
-    console.log('Ouverture de la modale de confirmation pour', friend)
     friendToDelete.value = friend
     showConfirmModal.value = true
 }
@@ -95,19 +160,68 @@ function openConfirmModal(friend: Friendship) {
 async function confirmDeleteFriend() {
     if (!friendToDelete.value) return
 
-    const friendPseudo = friendToDelete.value.friend.pseudo
+    const id = friendToDelete.value.id
+    const friendCode = friendToDelete.value.friend.friendCode
 
-    await friendshipStore.deleteFriendship(friendToDelete.value.id)
-        .then(() => {
-            toast.success(`« ${friendPseudo} » a bien été supprimé de tes amis.`)
-        })
-        .catch((err) => {
-            console.error('Erreur suppression :', err)
-            toast.error('Impossible de supprimer cet ami. Réessaie plus tard.')
-        })
-        .finally(() => {
-            friendToDelete.value = null
-        })
+    // Fermeture de la modal immédiatement
+    showConfirmModal.value = false
+
+    // Suppression optimiste
+    friendshipStore.friendships = friendshipStore.friendships.filter(f => f.id !== id)
+    useRoomStore().removePrivateRoomByFriendCode(friendCode)
+
+    try {
+        await friendshipStore.deleteFriendship(id)
+    } catch (err) {
+        console.error('Erreur suppression :', err)
+        toast.error('Impossible de supprimer cet ami. Réessaie plus tard.')
+
+        // Rechargement complet si erreur pour rétablir un état cohérent
+        await friendshipStore.fetchFriendships()
+        await useRoomStore().fetchPrivateRooms()
+    } finally {
+        friendToDelete.value = null
+    }
+}
+
+// Acceptation demande reçue
+async function acceptRequest(id: string) {
+    acceptingId.value = id
+
+    try {
+        await friendshipStore.acceptFriendRequest(id)
+        // TODO: Redirection vers la nouvelle room privée pour l'instant non(delete si pas utilisé)
+        // router.push({ name: 'private.chat', params: { roomId: accepted.room.id } })
+
+    } catch (e) {
+        toast.error('Erreur lors de l’acceptation.')
+    } finally {
+        acceptingId.value = null
+    }
+}
+
+
+// Refus demande reçue
+function openRejectModal(request: Friendship) {
+    requestToReject.value = request
+    showRejectModal.value = true
+}
+
+async function confirmRejectRequest() {
+    if (!requestToReject.value) return
+
+    // Optimistic update : on retire localement
+    const id = requestToReject.value.id
+    friendshipStore.receivedRequests = friendshipStore.receivedRequests.filter(r => r.id !== id)
+    showRejectModal.value = false
+
+    try {
+        await friendshipStore.rejectFriendRequest(id)
+    } catch (e) {
+        toast.error("Erreur lors du refus de la demande.")
+    } finally {
+        requestToReject.value = null
+    }
 }
 
 </script>

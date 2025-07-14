@@ -117,7 +117,7 @@ class WebSocketServer implements MessageComponentInterface
             return;
         }
 
-        // ✅ Route le message JSON au handler approprié
+        // Route le message JSON au handler approprié
         $this->router->handle($from, $msg);
     }
 

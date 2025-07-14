@@ -228,9 +228,9 @@ class RegistrationController extends AbstractController
     {
         // Trouver les utilisateurs
         $user1 = $userRepository->findOneBy(['email' => 'user@user.com']);
-        $user2 = $userRepository->findOneBy(['email' => 'turcotte.olin@example.com']);
-        $user3 = $userRepository->findOneBy(['email' => 'mohamed40@example.org']);
-        $user4 = $userRepository->findOneBy(['email' => 'douglas.bertrand@example.com']);
+        $user2 = $userRepository->findOneBy(['email' => 'trogahn@example.com']);
+        $user3 = $userRepository->findOneBy(['email' => 'ysporer@example.com']);
+        $user4 = $userRepository->findOneBy(['email' => 'darrin99@example.net']);
         if (!$user1 || !$user2 || !$user3 || !$user4) {
             throw new \RuntimeException('Un ou plusieurs utilisateurs non trouvés.');
         }
@@ -245,8 +245,8 @@ class RegistrationController extends AbstractController
         $friendship2->setRecipient($user1);
         $friendshipRepository->save($friendship2, true);
         $friendship3 = new Friendship();
-        $friendship3->setApplicant($user4);
-        $friendship3->setRecipient($user1);
+        $friendship3->setApplicant($user1);
+        $friendship3->setRecipient($user4);
         $friendshipRepository->save($friendship3, true);
 
         dd('Amitiés créées avec succès !');
