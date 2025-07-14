@@ -1,6 +1,7 @@
 import axios from '@/modules/axios'
 
 let socket: WebSocket | null = null
+let pingInterval: ReturnType<typeof setInterval> | null = null
 const listeners: ((data: any) => void)[] = []
 
 /**
@@ -8,7 +9,6 @@ const listeners: ((data: any) => void)[] = []
  */
 export async function connectWebSocket(): Promise<WebSocket | null> {
     if (socket && socket.readyState !== WebSocket.CLOSED) {
-        // TODO: Delete les console.log partout etc pour clean le code a la fin 
         console.warn('🟡 WebSocket déjà connecté')
         return socket
     }
@@ -29,6 +29,14 @@ export async function connectWebSocket(): Promise<WebSocket | null> {
                 type: 'authenticate',
                 token
             }))
+
+            // PING toutes les 30 secondes pour garder la connexion active
+            pingInterval = setInterval(() => {
+                if (socket?.readyState === WebSocket.OPEN) {
+                    console.log('📡 Ping envoyé au serveur')
+                    socket.send(JSON.stringify({ type: 'ping' }))
+                }
+            }, 30_000)
         }
 
         socket.onmessage = (event) => {
@@ -48,6 +56,11 @@ export async function connectWebSocket(): Promise<WebSocket | null> {
         socket.onclose = () => {
             console.log('🔌 WebSocket fermé')
             socket = null
+
+            if (pingInterval) {
+                clearInterval(pingInterval)
+                pingInterval = null
+            }
         }
 
         return socket
