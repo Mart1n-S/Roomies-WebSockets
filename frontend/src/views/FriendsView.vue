@@ -83,20 +83,20 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import ItemList from '@/components/UI/ItemList.vue'
 import ConfirmDeleteModal from '@/components/base/ConfirmDeleteModal.vue'
 import { useFriendshipStore } from '@/stores/friendshipStore'
 import { useUserStatusStore } from '@/stores/userStatusStore'
+import { useWebSocketStore } from '@/stores/wsStore'
 import { useRoomStore } from '@/stores/roomStore'
 import type { Friendship } from '@/models/Friendship'
 import { useToast } from 'vue-toastification'
 
 const friendshipStore = useFriendshipStore()
 const userStatusStore = useUserStatusStore()
-const router = useRouter()
+const wsStore = useWebSocketStore()
 const toast = useToast()
 
 const search = ref('')
@@ -188,11 +188,17 @@ async function confirmDeleteFriend() {
 async function acceptRequest(id: string) {
     acceptingId.value = id
 
-    try {
-        await friendshipStore.acceptFriendRequest(id)
-        // TODO: Redirection vers la nouvelle room privée pour l'instant non(delete si pas utilisé)
-        // router.push({ name: 'private.chat', params: { roomId: accepted.room.id } })
+    // Optimistic UI : on masque le bouton / chargeur
+    friendshipStore.receivedRequests = friendshipStore.receivedRequests.filter(f => f.id !== id)
 
+    try {
+        wsStore.send({
+            type: 'patch_friendship',
+            payload: {
+                friendshipId: id,
+                action: 'accepter'
+            }
+        })
     } catch (e) {
         toast.error('Erreur lors de l’acceptation.')
     } finally {
@@ -216,7 +222,13 @@ async function confirmRejectRequest() {
     showRejectModal.value = false
 
     try {
-        await friendshipStore.rejectFriendRequest(id)
+        wsStore.send({
+            type: 'patch_friendship',
+            payload: {
+                friendshipId: id,
+                action: 'refuser'
+            }
+        })
     } catch (e) {
         toast.error("Erreur lors du refus de la demande.")
     } finally {

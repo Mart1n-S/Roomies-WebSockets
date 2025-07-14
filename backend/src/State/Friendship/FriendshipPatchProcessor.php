@@ -18,7 +18,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-
+// TODO: A supprimer à la fin du projet pour clean le code on passe le websocket
 /**
  * @implements ProcessorInterface<FriendshipPatchDTO, Friendship>
  */

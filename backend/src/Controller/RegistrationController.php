@@ -237,8 +237,8 @@ class RegistrationController extends AbstractController
 
         // Créer des amitiés
         $friendship1 = new Friendship();
-        $friendship1->setApplicant($user2);
-        $friendship1->setRecipient($user1);
+        $friendship1->setApplicant($user1);
+        $friendship1->setRecipient($user2);
         $friendshipRepository->save($friendship1, true);
         $friendship2 = new Friendship();
         $friendship2->setApplicant($user3);

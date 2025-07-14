@@ -73,10 +73,6 @@ services:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"
 
-  App\Mapper\FriendshipMapper:
-    arguments:
-      $avatarPublicPath: "%app.user_avatar_public_path%"
-
   App\Service\AvatarUrlGeneratorService:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"

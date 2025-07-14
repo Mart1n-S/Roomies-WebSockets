@@ -9,6 +9,7 @@ import { useRoomStore } from './roomStore'
 import { useToast } from 'vue-toastification'
 import { useUserStatusStore } from './userStatusStore'
 import { useChatStore } from './chatStore'
+import { useFriendshipStore } from './friendshipStore'
 
 export const useWebSocketStore = defineStore('ws', {
     state: () => ({
@@ -97,6 +98,32 @@ export const useWebSocketStore = defineStore('ws', {
                     chatStore.incrementUnreadCount(data.message.roomId)
                 }
             }
+
+            if (data.type === 'friendship_updated') {
+                const roomStore = useRoomStore()
+                const friendshipStore = useFriendshipStore()
+
+                // Ajoute l'amitié
+                friendshipStore.friendships.push(data.friendship)
+
+                // Ajoute la room dans privateRooms (pas dans rooms)
+                roomStore.privateRooms.push(data.room)
+            }
+
+            if (data.type === 'friendship_deleted') {
+                const friendshipStore = useFriendshipStore()
+
+                // Retirer la demande envoyée si elle existe
+                friendshipStore.sentRequests = friendshipStore.sentRequests.filter(
+                    f => f.id !== data.friendshipId
+                )
+
+                // Facultatif : sécurité pour retirer aussi côté reçu si jamais
+                friendshipStore.receivedRequests = friendshipStore.receivedRequests.filter(
+                    f => f.id !== data.friendshipId
+                )
+            }
+
 
 
 

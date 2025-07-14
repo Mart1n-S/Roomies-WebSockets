@@ -2,8 +2,9 @@
 
 namespace App\WebSocket\Connection;
 
-use Ratchet\ConnectionInterface;
+use App\Entity\User;
 use Symfony\Component\Uid\Uuid;
+use Ratchet\ConnectionInterface;
 
 class ConnectionRegistry
 {
@@ -33,5 +34,18 @@ class ConnectionRegistry
     public function isConnected(Uuid $userId): bool
     {
         return isset($this->connections[$userId->toBinary()]);
+    }
+
+    public function getUserByFriendCode(string $friendCode): ?User
+    {
+        foreach ($this->connections as $conn) {
+            if (isset($conn->user) && $conn->user instanceof User) {
+                if ($conn->user->getFriendCode() === $friendCode) {
+                    return $conn->user;
+                }
+            }
+        }
+
+        return null;
     }
 }

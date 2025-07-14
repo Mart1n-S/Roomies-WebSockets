@@ -129,6 +129,7 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
         //         ]
         //     )
         // ),
+        // TODO: A supprimer à la fin du projet pour clean le code car on passe par websocket
         new Patch(
             uriTemplate: '/friendships/{id}',
             input: FriendshipPatchDTO::class,
