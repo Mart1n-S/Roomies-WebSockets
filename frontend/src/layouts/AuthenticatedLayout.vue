@@ -13,6 +13,7 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
+import { useFriendshipStore } from '@/stores/friendshipStore'
 import { useContextPanelStore } from '@/stores/contextPanelStore'
 import { useRoute } from 'vue-router'
 
@@ -22,11 +23,23 @@ import CreateGroupModalForm from '@/components/form/CreateGroupModalForm.vue'
 import ContextPanel from '@/components/layout/ContextPanel.vue'
 
 const auth = useAuthStore()
+const friendshipStore = useFriendshipStore()
 const contextPanel = useContextPanelStore()
 const route = useRoute()
 
 const showLoader = ref(true)
 const showCreateModal = ref(false)
+
+
+watch(
+    () => auth.user,
+    async (user) => {
+        if (user) {
+            await friendshipStore.initFriendshipStore()
+        }
+    },
+    { immediate: true }
+)
 
 watch(
     () => auth.appReady,

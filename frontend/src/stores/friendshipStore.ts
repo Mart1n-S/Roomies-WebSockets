@@ -52,6 +52,26 @@ export const useFriendshipStore = defineStore('friendship', {
 
     actions: {
         /**
+        * Initialise tous les friendships et demandes (si pas déjà fait)
+        */
+        async initFriendshipStore() {
+            if (this.hasFetchedFriendships) return
+
+            this.error = null
+            try {
+                console.log('Initialisation du store des amitiés...')
+                await Promise.all([
+                    this.fetchFriendships(),
+                    this.fetchReceivedRequests(),
+                    this.fetchSentRequests()
+                ])
+                this.hasFetchedFriendships = true
+            } catch (e: any) {
+                console.error('Erreur lors de l\'initialisation des amitiés :', e)
+                this.error = e.response?.data?.message || e.message || 'Erreur inconnue'
+            }
+        },
+        /**
          * Récupère les amitiés confirmées (status = 'friend').
          * Met également à jour le timestamp de dernière récupération.
          */
@@ -66,7 +86,7 @@ export const useFriendshipStore = defineStore('friendship', {
                 this.error = e.response?.data?.message || e.message || 'Erreur inconnue'
             } finally {
                 this.isLoading = false
-                this.hasFetchedFriendships = true
+                // this.hasFetchedFriendships = true
                 this.lastUpdated = Date.now()
             }
         },

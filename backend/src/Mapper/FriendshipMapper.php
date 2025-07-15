@@ -50,7 +50,7 @@ class FriendshipMapper
      * @param User $user
      * @return UserReadDTO
      */
-    private function mapUser(User $user): UserReadDTO
+    public function mapUser(User $user): UserReadDTO
     {
         $dto = new UserReadDTO();
         $dto->pseudo = $user->getPseudo();
