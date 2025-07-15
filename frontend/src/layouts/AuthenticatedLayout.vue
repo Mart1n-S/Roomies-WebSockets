@@ -17,7 +17,7 @@ import { useContextPanelStore } from '@/stores/contextPanelStore'
 import { useRoute } from 'vue-router'
 
 import Sidebar from '@/components/layout/Sidebar.vue'
-import LoadingScreen from '@/components/LoadingScreen.vue'
+import LoadingScreen from '@/components/UI/LoadingScreen.vue'
 import CreateGroupModalForm from '@/components/form/CreateGroupModalForm.vue'
 import ContextPanel from '@/components/layout/ContextPanel.vue'
 
@@ -30,7 +30,7 @@ const showLoader = ref(true)
 const showCreateModal = ref(false)
 
 watchEffect(() => {
-    showLoader.value = !auth.userFetched && !auth.user
+    showLoader.value = !auth.appReady
 })
 
 // Appelé quand on clique sur le bouton "+"

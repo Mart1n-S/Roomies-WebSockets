@@ -5,7 +5,7 @@
             <h2 class="text-xl font-semibold"><i class="pi pi-users" /> Amis</h2>
             <BaseButton @click="showAddModal = true">Ajouter</BaseButton>
         </div>
-
+        <hr class="h-[1px] border-roomies-gray1 my-3" />
         <!-- Switch entre les vues -->
         <div class="flex items-center gap-2">
             <BaseButton :variant="currentView === 'friends' ? 'primary' : 'secondary'" @click="currentView = 'friends'">
