@@ -56,11 +56,14 @@ class GlobalChatHandler implements WebSocketHandlerInterface
 
             case 'global_message':
                 if ($user && !empty($message['content'])) {
+                    // Nettoyage du contenu du message par précaution même si le front-end est censé le faire.
+                    $safeContent = strip_tags($message['content']);
+
                     $payload = [
                         'type' => 'global_message',
                         'message' => [
                             'id' => uniqid('global_', true),
-                            'content' => $message['content'],
+                            'content' => $safeContent,
                             'createdAt' => (new \DateTime())->format(\DateTime::ATOM),
                             'sender' => [
                                 'friendCode' => $user->getFriendCode(),
