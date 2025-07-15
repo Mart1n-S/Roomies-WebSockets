@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watchEffect } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useContextPanelStore } from '@/stores/contextPanelStore'
 import { useRoute } from 'vue-router'
@@ -21,7 +21,6 @@ import LoadingScreen from '@/components/UI/LoadingScreen.vue'
 import CreateGroupModalForm from '@/components/form/CreateGroupModalForm.vue'
 import ContextPanel from '@/components/layout/ContextPanel.vue'
 
-
 const auth = useAuthStore()
 const contextPanel = useContextPanelStore()
 const route = useRoute()
@@ -29,19 +28,34 @@ const route = useRoute()
 const showLoader = ref(true)
 const showCreateModal = ref(false)
 
-watchEffect(() => {
-    showLoader.value = !auth.appReady
-})
+watch(
+    () => auth.appReady,
+    (ready) => {
+        showLoader.value = !ready
+    },
+    { immediate: true }
+)
 
-// Appelé quand on clique sur le bouton "+"
+// Affiche le panneau contextuel selon la route
+function updateContextPanel() {
+    if (route.path === '/global/chat') {
+        contextPanel.showGlobalChatPanel()
+    } else if (
+        route.path === '/dashboard' ||
+        route.path.startsWith('/dashboard/chat') ||
+        route.path.startsWith('/dashboard/friends')
+    ) {
+        contextPanel.showPrivateMessagesPanel()
+    } else {
+        contextPanel.clearPanel()
+    }
+}
+
+// Toujours synchro : au premier chargement ET à chaque navigation
+onMounted(updateContextPanel)
+watch(() => route.path, updateContextPanel)
+
 const openCreateModal = () => {
     showCreateModal.value = true
 }
-
-onMounted(() => {
-    // Affiche le panneau latéral si on est sur le dashboard ou dans une conversation privée
-    if (route.path.startsWith('/dashboard')) {
-        contextPanel.showPrivateMessagesPanel()
-    }
-})
 </script>

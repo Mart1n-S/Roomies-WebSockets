@@ -6,7 +6,15 @@
             <BaseButton iconLeft variant="secondary" noIconSpace class="!w-12 !h-12 !p-0 justify-center"
                 :class="dashboardClass" title="Tableau de bord" @click="navigateTo('/dashboard')">
                 <template #icon-left>
-                    <i class="text-lg pi pi-home" />
+                    <i class="text-lg pi pi-discord" />
+                </template>
+            </BaseButton>
+
+            <!-- Chat global -->
+            <BaseButton iconLeft variant="secondary" noIconSpace class="!w-12 !h-12 !p-0 justify-center"
+                :class="globalChatClass" title="Chat global" @click="navigateTo('/global/chat')">
+                <template #icon-left>
+                    <i class="text-lg pi pi-globe" />
                 </template>
             </BaseButton>
         </div>
@@ -80,6 +88,13 @@ const settingsClass = computed(() =>
         ? '!bg-roomies-blue !rounded-xl'
         : '!rounded-2xl hover:!rounded-xl'
 )
+
+const globalChatClass = computed(() =>
+    route.path === '/global/chat'
+        ? '!bg-roomies-blue !rounded-xl'
+        : '!rounded-2xl hover:!rounded-xl'
+)
+
 
 const roomClass = (roomId: string) => {
     return route.path === `/room/${roomId}`

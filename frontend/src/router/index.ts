@@ -95,7 +95,21 @@ const routes = [
           title: 'Mes amis - Roomies'
         }
       }
-
+    ]
+  },
+  {
+    path: '/global/chat',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'global.chat',
+        component: () => import('@/views/GlobalChatView.vue'),
+        meta: {
+          title: 'Chat global - Roomies'
+        }
+      }
     ]
   },
   {

@@ -11,6 +11,8 @@ import { useUserStatusStore } from './userStatusStore'
 import { useChatStore } from './chatStore'
 import { useFriendshipStore } from './friendshipStore'
 import { useAuthStore } from './authStore'
+import { useGlobalChatStore } from './globalChatStore'
+import { useGlobalChatUsersStore } from './globalChatUsersStore'
 import { router } from '@/router'
 
 
@@ -40,15 +42,25 @@ export const useWebSocketStore = defineStore('ws', {
         onMessage(data: any) {
             this.lastMessage = data
 
+            /**
+             * Traite les différents types de messages reçus
+             * et met à jour les stores correspondants.
+             */
             if (data.type === 'authenticated') {
                 this.isConnected = true
             }
 
+            /**
+             * Initialisation des groupes
+             */
             if (data.type === 'init_groups') {
                 const roomStore = useRoomStore()
                 roomStore.setRooms(data.data)
             }
 
+            /**
+             * Initialisation des rooms privées
+             */
             if (data.type === 'init_private_rooms') {
                 const roomStore = useRoomStore()
                 const chatStore = useChatStore()
@@ -57,12 +69,17 @@ export const useWebSocketStore = defineStore('ws', {
                 chatStore.setUnreadCountsFromServer(data.data)
             }
 
+            /**
+             * Mise à jour du nombre de messages non lus dans une room
+             */
             if (data.type === 'room_unread_updated') {
                 const chatStore = useChatStore()
                 chatStore.setUnreadCount(data.roomId, data.unreadCount)
             }
 
-
+            /**
+             * Notification de création de room
+             */
             if (data.type === 'room_created') {
                 const roomStore = useRoomStore()
                 roomStore.addRoom(data.room)
@@ -72,6 +89,9 @@ export const useWebSocketStore = defineStore('ws', {
                 toast.info(`Tu as été ajouté(e) au groupe "${roomName}"`)
             }
 
+            /**
+             * Mise à jour du statut en ligne d'un utilisateur
+             */
             if (data.type === 'user-status') {
                 const userStatusStore = useUserStatusStore()
 
@@ -82,16 +102,25 @@ export const useWebSocketStore = defineStore('ws', {
                 }
             }
 
+            /**
+             * Mise à jour du statut en ligne de plusieurs utilisateurs
+             */
             if (data.type === 'bulk-status') {
                 const userStatusStore = useUserStatusStore()
                 data.onlineFriends.forEach((code: string) => userStatusStore.setUserOnline(code))
             }
 
+            /**
+             * Mise à jour des messages dans une room
+             */
             if (data.type === 'message') {
                 const chatStore = useChatStore()
                 chatStore.appendMessages(data.roomId, [data.message])
             }
 
+            /**
+             * Ajout d'un nouveau message dans le chat
+             */
             if (data.type === 'new_message') {
                 const chatStore = useChatStore()
                 chatStore.appendMessages(data.message.roomId, [data.message])
@@ -102,6 +131,9 @@ export const useWebSocketStore = defineStore('ws', {
                 }
             }
 
+            /**
+             * Mise à jour des amitiés
+             */
             if (data.type === 'friendship_updated') {
                 const roomStore = useRoomStore()
                 const friendshipStore = useFriendshipStore()
@@ -112,7 +144,7 @@ export const useWebSocketStore = defineStore('ws', {
                 const currentUserCode = authStore.user?.friendCode
                 const rawFriendship = data.friendship
 
-                // 🛠 Corrige le champ .friend si c’est toi
+                // Corrige le champ .friend si c’est le user courant
                 if (rawFriendship.friend.friendCode === currentUserCode) {
                     const otherMember = data.room.members.find(
                         (m: { member: { friendCode: string } }) => m.member.friendCode !== currentUserCode
@@ -145,8 +177,9 @@ export const useWebSocketStore = defineStore('ws', {
                 }
             }
 
-
-
+            /**
+             * Suppression d'une amitié ou d'une demande
+             */
             if (data.type === 'friendship_deleted') {
                 const friendshipStore = useFriendshipStore()
 
@@ -161,6 +194,9 @@ export const useWebSocketStore = defineStore('ws', {
                 )
             }
 
+            /**
+             * Notification de succès d'envoi de demande d'ami
+             */
             if (data.type === 'friend_request_success') {
                 const friendshipStore = useFriendshipStore()
                 friendshipStore.sentRequests.push(data.data)
@@ -169,6 +205,9 @@ export const useWebSocketStore = defineStore('ws', {
                 toast.success('Demande d’ami envoyée avec succès !')
             }
 
+            /**
+             * Notification de réception d'une demande d'ami
+             */
             if (data.type === 'friend_request_received') {
                 const friendshipStore = useFriendshipStore()
                 friendshipStore.receivedRequests.push(data.data)
@@ -177,6 +216,46 @@ export const useWebSocketStore = defineStore('ws', {
                 toast.info(`${data.data.friend.pseudo} vous a envoyé une demande d’ami`)
             }
 
+            /**
+             * Réception de la liste complète et à jour des utilisateurs actuellement connectés
+             * au chat global (envoyé lors de la connexion initiale ou d'un refresh massif).
+             */
+            if (data.type === 'global_active_users') {
+                // data.users = liste complète à jour !
+                const globalChatUsersStore = useGlobalChatUsersStore()
+                globalChatUsersStore.setUsers(data.users)
+            }
+
+
+            /**
+             * Un nouvel utilisateur vient de rejoindre le chat global (événement temps réel).
+             */
+            if (data.type === 'global_user_joined') {
+                // data.user = nouvel utilisateur connecté au chat global
+                const globalChatUsersStore = useGlobalChatUsersStore()
+                globalChatUsersStore.addUser(data.user)
+            }
+
+            /**
+             * Mise à jour des utilisateurs actifs dans le chat global
+             */
+            if (data.type === 'global_user_left') {
+                // data.friendCode = utilisateur qui vient de partir
+                const globalChatUsersStore = useGlobalChatUsersStore()
+                globalChatUsersStore.removeUser(data.friendCode)
+            }
+
+            /**
+             * Ajout d'un message dans le chat global
+             */
+            if (data.type === 'global_message') {
+                const globalChatStore = useGlobalChatStore()
+                globalChatStore.addMessage(data.message)
+            }
+
+            /**
+             * Gestion des erreurs WebSocket
+             */
             if (data.type === 'error') {
                 const toast = useToast()
                 const roomStore = useRoomStore()

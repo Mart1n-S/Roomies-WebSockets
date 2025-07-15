@@ -11,6 +11,8 @@ use App\State\Websocket\Group\GroupReadProvider;
 use App\WebSocket\Connection\ConnectionRegistry;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\State\WebSocket\Group\PrivateRoomReadProvider;
+use App\WebSocket\Connection\GlobalChatRegistry;
+
 
 
 class WebSocketServer implements MessageComponentInterface
@@ -19,6 +21,7 @@ class WebSocketServer implements MessageComponentInterface
         private readonly MessageRouter $router,
         private readonly WebSocketAuthenticator $authenticator,
         private readonly ConnectionRegistry $registry,
+        private readonly GlobalChatRegistry $globalChatRegistry,
         private readonly GroupReadProvider $groupReadProvider,
         private readonly PrivateRoomReadProvider $privateRoomReadProvider,
         private readonly SerializerInterface $serializer,
@@ -126,6 +129,7 @@ class WebSocketServer implements MessageComponentInterface
         if (isset($conn->user)) {
             $this->registry->unregister($conn->user->getId());
             $this->userStatusHandler->notifyFriendsAboutStatusChange($conn, false);
+            $this->globalChatRegistry->remove($conn);
             echo "🔴 Déconnexion de l'utilisateur ID {$conn->user->getId()}\n";
         } else {
             echo "🔌 Déconnexion d'un client non authentifié\n";

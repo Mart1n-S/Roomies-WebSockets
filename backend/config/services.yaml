@@ -82,6 +82,10 @@ services:
     public: true
     autowire: true
 
+  App\WebSocket\Connection\GlobalChatRegistry:
+    public: true
+    shared: true
+
   # App\WebSocket\WebSocketServer:
   #   public: true
   #   autowire: true

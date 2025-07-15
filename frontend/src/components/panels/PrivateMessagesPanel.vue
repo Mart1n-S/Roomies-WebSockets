@@ -1,5 +1,6 @@
 <template>
     <div class="flex flex-col h-full p-3 space-y-3 text-white">
+        <p class="my-4 text-lg font-bold"><i class="pi pi-discord" /> Dashboard</p>
         <BaseInput name="search" label="Rechercher un ami" v-model="search" autocomplete="off"
             placeholder="Tapez un pseudo..." type="text" />
 
