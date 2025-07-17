@@ -113,6 +113,25 @@ const routes = [
     ]
   },
   {
+    path: '/games',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'games.list',
+        component: () => import('@/views/LobbyView.vue'),
+        meta: { title: 'Jeux en ligne - Roomies' }
+      },
+      {
+        path: '/room/:roomId',
+        name: 'games.room',
+        component: () => import('@/views/GamesView.vue'),
+        meta: { title: 'Jeux en ligne - Roomies' }
+      },
+    ]
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }

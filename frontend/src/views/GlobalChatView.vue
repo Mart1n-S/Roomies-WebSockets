@@ -11,8 +11,7 @@
             <h2 class="text-xl font-semibold">Chat</h2>
         </div>
         <div class="flex-1 p-4 h-3/6 bg-roomies-gray4 border-y-2 border-roomies-gray2">
-            <div ref="scrollContainer" class="relative flex flex-col h-full p-6 space-y-4 scrollbar"
-                @scroll.passive="onScroll">
+            <div ref="scrollContainer" class="relative flex flex-col h-full p-6 space-y-4 scrollbar">
                 <div v-if="isLoading" class="absolute top-0 left-0 right-0 flex justify-center">
                     <div
                         class="flex flex-col items-center gap-2 px-4 py-2 text-sm text-gray-300 rounded-lg shadow bg-roomies-gray3">
@@ -94,31 +93,6 @@ onBeforeUnmount(() => {
     globalChatStore.leave()
 })
 
-const loadMore = async () => {
-    const container = scrollContainer.value
-    const oldHeight = container?.scrollHeight || 0
-
-    await globalChatStore.loadMoreMessages()
-
-    nextTick(() => {
-        if (container) {
-            const newHeight = container.scrollHeight
-            container.scrollTop = newHeight - oldHeight
-        }
-    })
-}
-
-const onScroll = () => {
-    const container = scrollContainer.value
-    if (
-        container &&
-        container.scrollTop <= 10 &&
-        globalChatStore.hasMore &&
-        !globalChatStore.isLoading
-    ) {
-        loadMore()
-    }
-}
 
 function handleSendMessage(content: string) {
     wsStore.send({

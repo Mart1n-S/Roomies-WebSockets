@@ -9,9 +9,10 @@ use App\Security\WebSocketAuthenticator;
 use App\WebSocket\Handler\UserStatusHandler;
 use App\State\Websocket\Group\GroupReadProvider;
 use App\WebSocket\Connection\ConnectionRegistry;
+use App\WebSocket\Connection\GlobalChatRegistry;
+use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\State\WebSocket\Group\PrivateRoomReadProvider;
-use App\WebSocket\Connection\GlobalChatRegistry;
 
 
 
@@ -22,6 +23,7 @@ class WebSocketServer implements MessageComponentInterface
         private readonly WebSocketAuthenticator $authenticator,
         private readonly ConnectionRegistry $registry,
         private readonly GlobalChatRegistry $globalChatRegistry,
+        private readonly GameRoomPlayersRegistry $gameRoomPlayersRegistry,
         private readonly GroupReadProvider $groupReadProvider,
         private readonly PrivateRoomReadProvider $privateRoomReadProvider,
         private readonly SerializerInterface $serializer,
