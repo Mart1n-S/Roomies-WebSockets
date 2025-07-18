@@ -69,10 +69,6 @@ services:
   App\Serializer\UploadedFileDenormalizer:
     tags: [serializer.normalizer]
 
-  App\Mapper\UserMapper:
-    arguments:
-      $avatarPublicPath: "%app.user_avatar_public_path%"
-
   App\Service\AvatarUrlGeneratorService:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"

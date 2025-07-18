@@ -3,6 +3,7 @@ import axios from '@/modules/axios'
 let socket: WebSocket | null = null
 let pingInterval: ReturnType<typeof setInterval> | null = null
 const listeners: ((data: any) => void)[] = []
+let shouldReconnect = true
 
 /**
  * Initialise la connexion WebSocket en récupérant d'abord un token temporaire
@@ -63,11 +64,15 @@ export async function connectWebSocket(): Promise<WebSocket | null> {
                 pingInterval = null
             }
 
-            // Reconnexion auto dans 5 sec
-            setTimeout(() => {
-                console.log('🔁 Tentative de reconnexion WebSocket...')
-                connectWebSocket()
-            }, 1000)
+            // Ne reconnecte que si voulu
+            if (shouldReconnect) {
+                setTimeout(() => {
+                    console.log('🔁 Tentative de reconnexion WebSocket...')
+                    connectWebSocket()
+                }, 1000)
+            } else {
+                console.log('🚫 Pas de reconnexion WebSocket (logout volontaire)')
+            }
         }
 
         return socket
@@ -107,5 +112,12 @@ export function removeWebSocketListener(callback: (data: any) => void) {
     const index = listeners.indexOf(callback)
     if (index !== -1) {
         listeners.splice(index, 1)
+    }
+}
+
+export function disconnectWebSocket() {
+    shouldReconnect = false
+    if (socket) {
+        socket.close()
     }
 }

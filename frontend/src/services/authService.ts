@@ -90,6 +90,18 @@ export async function requestNewConfirmationEmail(email: string) {
 }
 
 /**
+ * Met à jour le profil utilisateur (pseudo, avatar, mot de passe).
+ * @param formData Données multipart (pseudo, avatar, currentPassword, newPassword…)
+ * @returns L'utilisateur mis à jour (ou message)
+ */
+export async function updateProfile(formData: FormData) {
+    const response = await axios.post('/user/edit', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return response.data
+}
+
+/**
  * Déconnecte l'utilisateur côté backend (supprime le cookie + token DB).
  */
 export async function logout() {
