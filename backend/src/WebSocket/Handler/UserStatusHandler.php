@@ -2,18 +2,20 @@
 
 namespace App\WebSocket\Handler;
 
+use Ratchet\ConnectionInterface;
+use App\Repository\RoomRepository;
 use App\Repository\UserRepository;
 use App\Repository\FriendshipRepository;
 use App\WebSocket\Connection\ConnectionRegistry;
 use App\WebSocket\Contract\WebSocketHandlerInterface;
-use Ratchet\ConnectionInterface;
 
 class UserStatusHandler implements WebSocketHandlerInterface
 {
     public function __construct(
         private readonly ConnectionRegistry $registry,
         private readonly UserRepository $userRepository,
-        private readonly FriendshipRepository $friendshipRepository
+        private readonly FriendshipRepository $friendshipRepository,
+        private readonly RoomRepository $roomRepository,
     ) {}
 
     public function supports(string $type): bool
@@ -70,6 +72,61 @@ class UserStatusHandler implements WebSocketHandlerInterface
         $conn->send(json_encode([
             'type' => 'bulk-status',
             'onlineFriends' => $onlineFriendCodes
+        ]));
+    }
+
+    public function notifyGroupMembersAboutStatusChange(ConnectionInterface $conn, bool $online): void
+    {
+        $user = $conn->user;
+        if (!$user) return;
+
+        $rooms = $this->roomRepository->findGroupsForUser($user);
+        $sentTo = new \SplObjectStorage();
+
+        foreach ($rooms as $room) {
+            foreach ($room->getMembers() as $membership) {
+                $member = $membership->getUser();
+
+                if ($member->getId() === $user->getId()) {
+                    continue;
+                }
+
+                $receiverConn = $this->registry->getConnection($member->getId());
+
+                if ($receiverConn && !$sentTo->contains($receiverConn)) {
+                    $receiverConn->send(json_encode([
+                        'type' => 'user-status',
+                        'friendCode' => $user->getFriendCode(),
+                        'online' => $online
+                    ]));
+
+                    $sentTo->attach($receiverConn);
+                }
+            }
+        }
+    }
+
+    public function sendOnlineGroupMembersList(ConnectionInterface $conn): void
+    {
+        $user = $conn->user;
+        if (!$user) return;
+
+        $rooms = $this->roomRepository->findGroupsForUser($user);
+        $onlineCodes = [];
+
+        foreach ($rooms as $room) {
+            foreach ($room->getMembers() as $membership) {
+                $member = $membership->getUser();
+
+                if ($this->registry->isConnected($member->getId())) {
+                    $onlineCodes[] = $member->getFriendCode();
+                }
+            }
+        }
+
+        $conn->send(json_encode([
+            'type' => 'bulk-status',
+            'onlineFriends' => array_values(array_unique($onlineCodes))
         ]));
     }
 }

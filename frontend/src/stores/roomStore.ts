@@ -5,6 +5,7 @@ import { sendWebSocketMessage } from '@/services/websocket'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from './authStore'
 import { useWebSocketStore } from './wsStore'
+import { router } from '@/router'
 
 export const useRoomStore = defineStore('room', {
     state: () => ({
@@ -46,6 +47,14 @@ export const useRoomStore = defineStore('room', {
         resetError() {
             this.error = ''
         },
+
+        /**
+         * Supprime un salon de groupe de la liste.
+         */
+        removeRoom(roomId: string) {
+            this.rooms = this.rooms.filter(room => room.id !== roomId)
+        },
+
 
         /**
          * Crée un nouveau groupe avec un nom et une liste de membres.
@@ -93,6 +102,96 @@ export const useRoomStore = defineStore('room', {
                 this.loading = false
             }
         },
+
+        async addMembersToRoom(roomId: string, friendCodes: string[]): Promise<void> {
+            this.resetError()
+            this.loading = true
+
+            try {
+                for (const friendCode of friendCodes) {
+                    sendWebSocketMessage({
+                        type: 'group_add_member',
+                        roomId,
+                        friendCode
+                    })
+                }
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'Erreur lors de l’ajout de membres.'
+                throw err
+            } finally {
+                this.loading = false
+            }
+        },
+
+        /**
+         * Envoie un message WebSocket pour quitter un groupe
+         */
+        async leaveGroup(roomId: string): Promise<void> {
+            const wsStore = useWebSocketStore()
+
+            wsStore.send({
+                type: 'group_leave',
+                roomId
+            })
+
+            router.push('/dashboard')
+        },
+
+        /**
+         * Envoie un message WebSocket pour supprimer un groupe
+         */
+        async deleteGroup(roomId: string): Promise<void> {
+            const wsStore = useWebSocketStore()
+
+            wsStore.send({
+                type: 'group_delete',
+                roomId
+            })
+
+            router.push('/dashboard')
+        },
+
+        /**
+         * Met à jour les paramètres d'un groupe (nom, rôles).
+         * Envoie un message WebSocket pour notifier les membres.
+         * @param roomId ID du salon à mettre à jour
+         * @param payload Contient le nouveau nom et les rôles
+         */
+        async updateGroupSettings(roomId: string, payload: { name: string; roles: { friendCode: string; role: string }[] }): Promise<void> {
+            const wsStore = useWebSocketStore()
+
+            wsStore.send({
+                type: 'group_update_settings',
+                roomId,
+                name: payload.name,
+                roles: payload.roles
+            })
+        },
+
+        /**
+         * Exclut un membre du groupe (WebSocket)
+         * @param roomId ID du salon
+         * @param friendCode Code ami du membre à exclure
+         */
+        async kickMember(roomId: string, friendCode: string): Promise<void> {
+            this.resetError?.()
+            this.loading = true
+
+            try {
+                const wsStore = useWebSocketStore()
+                wsStore.send({
+                    type: 'group_kick_member',
+                    roomId,
+                    friendCode
+                })
+            } catch (err: any) {
+                this.error = err?.response?.data?.message || 'Erreur lors de l’exclusion du membre.'
+                throw err
+            } finally {
+                this.loading = false
+            }
+        },
+
 
         /**
          * Modifie la visibilité d’un salon privé pour l’utilisateur courant.

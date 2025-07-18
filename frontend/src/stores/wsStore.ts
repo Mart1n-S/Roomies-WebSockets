@@ -13,6 +13,7 @@ import { useFriendshipStore } from './friendshipStore'
 import { useAuthStore } from './authStore'
 import { useGlobalChatStore } from './globalChatStore'
 import { useGlobalChatUsersStore } from './globalChatUsersStore'
+import { useGameStore } from './gameStore'
 import { router } from '@/router'
 
 
@@ -20,7 +21,8 @@ export const useWebSocketStore = defineStore('ws', {
     state: () => ({
         isConnected: false,
         lastMessage: null as any,
-        socketInstance: null as WebSocket | null
+        socketInstance: null as WebSocket | null,
+        morpionWaitingRestart: false as boolean
     }),
 
     actions: {
@@ -252,6 +254,215 @@ export const useWebSocketStore = defineStore('ws', {
                 const globalChatStore = useGlobalChatStore()
                 globalChatStore.addMessage(data.message)
             }
+
+            /**
+             * Réception de la liste des rooms de jeu
+             */
+            if (data.type === 'game_room_list') {
+                const gameStore = useGameStore()
+                gameStore.setRooms(data.rooms)
+                gameStore.isLoading = false
+            }
+
+            /**
+             * Notification de création d'une nouvelle room de jeu
+             */
+            if (data.type === 'game_room_created') {
+                const gameStore = useGameStore()
+                gameStore.addRoom(data.room)
+                gameStore.isLoading = false
+            }
+
+            /**
+             * Notification d'erreur lors de la création d'une room de jeu
+             */
+            if (data.type === 'game_room_error') {
+                const toast = useToast()
+                toast.error(data.message)
+                const gameStore = useGameStore()
+                gameStore.isLoading = false
+            }
+
+            if (data.type === 'game_room_joined') {
+                // data.players = array of UserReadDTO, data.roomId
+                const gameStore = useGameStore()
+                gameStore.setCurrentRoomPlayers(data.players, String(data.roomId))
+                // Navigation (dans le store ou bien dans la vue)
+                router.push(`/room/${data.roomId}`)
+            }
+
+            if (data.type === 'game_room_player_joined') {
+                const gameStore = useGameStore()
+
+                gameStore.addPlayerToCurrentRoom(data.player)
+
+                if (data.wasViewer) {
+                    gameStore.incrementViewerCount(String(data.roomId))
+                }
+            }
+
+
+            if (data.type === 'game_room_viewing') {
+                const gameStore = useGameStore()
+
+                // On initialise les joueurs visibles dans la room même si on est viewer
+                gameStore.setCurrentRoomPlayers(data.players, String(data.roomId))
+
+                // On incrémente le nombre de spectateurs (facultatif si déjà fait dans le join)
+                gameStore.incrementViewerCount(String(data.roomId))
+
+                // Redirige vers la vue de la room
+                router.push(`/room/${data.roomId}`)
+
+                gameStore.setMorpionGameState(data.morpion)
+            }
+
+
+            // Update du nombre de joueurs sur la room card
+            if (data.type === 'game_room_players_update') {
+                const gameStore = useGameStore()
+                const idx = gameStore.rooms.findIndex(r => r.id == String(data.roomId))
+                if (idx !== -1) {
+                    gameStore.rooms[idx].playersCount = data.playersCount
+                    gameStore.rooms[idx].viewersCount = data.viewerCount
+                }
+            }
+
+            if (data.type === 'morpion_update') {
+                // Dès qu’une nouvelle partie démarre (status: 'playing'), on reset l’attente
+                if (data.status === 'playing') {
+                    this.morpionWaitingRestart = false
+                }
+                // On maj la state du jeu (board etc)
+                const gameStore = useGameStore()
+                gameStore.setMorpionGameState(data)
+            }
+            if (data.type === 'morpion_restart_wait') {
+                // L’autre joueur n’a pas encore accepté de rejouer
+                this.morpionWaitingRestart = true
+            }
+            if (data.type === 'morpion_play_error') {
+                const toast = useToast()
+                toast.error(data.message || 'Coup non valide.')
+            }
+
+            /**
+            * Un joueur a quitté la room de jeu (broadcasté à tous les joueurs dans la room)
+            */
+            if (data.type === 'game_room_player_left') {
+                const gameStore = useGameStore()
+                const authStore = useAuthStore()
+
+                // Ne rien faire de spécial si c’est un viewer
+                if (data.wasViewer) {
+                    return
+                }
+
+                if (data.friendCode === authStore.user?.friendCode) {
+                    gameStore.resetCurrentRoom()
+                    router.push('/games')
+                    gameStore.resetScores()
+                } else {
+                    gameStore.removePlayerFromCurrentRoom(data.friendCode)
+                    gameStore.resetScores()
+                }
+            }
+
+
+            /**
+            * Mise à jour du nombre de joueurs et état de la room après un join/quit (affiché sur les cards)
+            */
+            if (data.type === 'game_room_players_update') {
+                const gameStore = useGameStore();
+                const idx = gameStore.rooms.findIndex(r => r.id == String(data.roomId));
+                if (idx !== -1) {
+                    gameStore.rooms[idx].playersCount = data.playersCount;
+                    // Met aussi à jour la room (optionnel, si tu affiches plus d'infos sur la card)
+                    gameStore.rooms[idx] = {
+                        ...gameStore.rooms[idx],
+                        ...data.room
+                    };
+                }
+            }
+
+            /**
+             * Nouveau message de chat reçu dans une room de jeu
+             */
+            if (data.type === 'game_chat_message') {
+                const gameStore = useGameStore()
+                gameStore.addChatMessage(data.message)
+            }
+
+            /**
+             * Suppression d'une room de jeu
+             */
+            if (data.type === 'game_room_deleted') {
+                const gameStore = useGameStore()
+                const toast = useToast()
+
+                // Solution 1: Utiliser la valeur directement depuis le store
+                const currentRoomId = gameStore.currentRoomId
+
+                gameStore.removeRoom(data.roomId)
+
+                // Comparaison des IDs en tant que strings
+                if (String(currentRoomId) === String(data.roomId)) {
+                    gameStore.resetCurrentRoom()
+                    router.push('/games')
+                    toast.info('La partie a été supprimée.')
+                }
+            }
+
+            if (data.type === 'group_updated') {
+                const roomStore = useRoomStore()
+                const updatedRoom = data.room
+                const index = roomStore.rooms.findIndex(r => r.id === updatedRoom.id)
+
+                if (index !== -1) {
+                    roomStore.rooms[index] = updatedRoom
+                } else {
+                    roomStore.rooms.push(updatedRoom)
+                }
+            }
+
+            if (data.type === 'group_deleted') {
+                const roomStore = useRoomStore()
+                const chatStore = useChatStore()
+                const toast = useToast()
+
+                const roomId = data.roomId
+                const currentRoomId = router.currentRoute.value.params.roomId
+
+                roomStore.removeRoom(roomId)
+                chatStore.clearRoomData(roomId)
+
+                if (currentRoomId === roomId) {
+                    router.push('/dashboard')
+                    toast.info('Le groupe a été supprimé.')
+                }
+            }
+
+            if (data.type === 'group_kicked') {
+                const roomStore = useRoomStore()
+                const chatStore = useChatStore()
+                const toast = useToast()
+
+                const roomId = data.roomId
+                const currentRoomId = router.currentRoute.value.params.roomId
+
+                // Retire la room de la sidebar
+                roomStore.removeRoom(roomId)
+                // Vide le chat de la room
+                chatStore.clearRoomData(roomId)
+
+                if (currentRoomId === roomId) {
+                    router.push('/dashboard')
+                    toast.info('Tu as été retiré du serveur.')
+                } else {
+                    toast.info('Tu as été retiré d\'un serveur.')
+                }
+            }
+
 
             /**
              * Gestion des erreurs WebSocket

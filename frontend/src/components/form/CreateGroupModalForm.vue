@@ -39,7 +39,7 @@
 import { ref, computed, onMounted, watchEffect, watch } from 'vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
-import FriendSelectionList from '@/components//form/inputs/FriendSelectionList.vue'
+import FriendSelectionList from '@/components/form/inputs/FriendSelectionList.vue'
 import { useFriendshipStore } from '@/stores/friendshipStore'
 import { useRoomStore } from '@/stores/roomStore'
 import { useToast } from 'vue-toastification'

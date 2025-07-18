@@ -113,6 +113,40 @@ const routes = [
     ]
   },
   {
+    path: '/games',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'games.list',
+        component: () => import('@/views/LobbyView.vue'),
+        meta: { title: 'Jeux en ligne - Roomies' }
+      },
+      {
+        path: '/room/:roomId',
+        name: 'games.room',
+        component: () => import('@/views/GamesView.vue'),
+        meta: { title: 'Jeux en ligne - Roomies' }
+      },
+    ]
+  },
+  {
+    path: '/serveur',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'chat/:roomId',
+        name: 'serveurChat.private',
+        component: () => import('@/views/PrivateServeurChatView.vue'),
+        meta: {
+          title: 'Conversation de groupe - Roomies'
+        }
+      }
+    ]
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }

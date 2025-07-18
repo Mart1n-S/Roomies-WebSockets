@@ -59,6 +59,8 @@ function updateContextPanel() {
         route.path.startsWith('/dashboard/friends')
     ) {
         contextPanel.showPrivateMessagesPanel()
+    } else if (route.path.startsWith('/serveur')) {
+        contextPanel.showServeurPanel()
     } else {
         contextPanel.clearPanel()
     }

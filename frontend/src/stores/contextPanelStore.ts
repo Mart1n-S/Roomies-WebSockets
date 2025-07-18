@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { markRaw } from 'vue'
 import PrivateMessagesPanel from '@/components/panels/PrivateMessagesPanel.vue'
 import GlobalChatPanel from '@/components/panels/GlobalChatPanel.vue'
+import ServeurMessagesPanel from '@/components/panels/ServeurMessagesPanel.vue'
 
 export const useContextPanelStore = defineStore('contextPanel', {
     state: () => ({
@@ -23,6 +24,14 @@ export const useContextPanelStore = defineStore('contextPanel', {
          */
         showGlobalChatPanel() {
             this.component = markRaw(GlobalChatPanel)
+            this.props = null
+        },
+
+        /**
+         * Affiche le panneau du chat de groupe (dashboard)
+         */
+        showServeurPanel() {
+            this.component = markRaw(ServeurMessagesPanel)
             this.props = null
         },
 

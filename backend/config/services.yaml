@@ -86,6 +86,10 @@ services:
     public: true
     shared: true
 
+  App\WebSocket\Connection\GameRoomPlayersRegistry:
+    public: true
+    autowire: true
+
   # App\WebSocket\WebSocketServer:
   #   public: true
   #   autowire: true
