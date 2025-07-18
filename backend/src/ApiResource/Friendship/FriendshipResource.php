@@ -129,6 +129,7 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
         //         ]
         //     )
         // ),
+        // TODO: A supprimer à la fin du projet pour clean le code car on passe par websocket
         new Patch(
             uriTemplate: '/friendships/{id}',
             input: FriendshipPatchDTO::class,
@@ -138,7 +139,7 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                 'groups' => ['patch:friendship'],
                 AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false
             ],
-            normalizationContext: ['groups' => ['read:friendship']],
+            normalizationContext: ['groups' => ['read:friendshipWithRoom']],
             description: "Accepter ou refuser une demande d’ami. Action attendue : 'accepter' ou 'refuser'.",
             openapi: new Model\Operation(
                 summary: "Répondre à une demande d’ami",

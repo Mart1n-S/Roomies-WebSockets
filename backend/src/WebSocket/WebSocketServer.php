@@ -9,8 +9,11 @@ use App\Security\WebSocketAuthenticator;
 use App\WebSocket\Handler\UserStatusHandler;
 use App\State\Websocket\Group\GroupReadProvider;
 use App\WebSocket\Connection\ConnectionRegistry;
+use App\WebSocket\Connection\GlobalChatRegistry;
+use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\State\WebSocket\Group\PrivateRoomReadProvider;
+
 
 
 class WebSocketServer implements MessageComponentInterface
@@ -19,6 +22,8 @@ class WebSocketServer implements MessageComponentInterface
         private readonly MessageRouter $router,
         private readonly WebSocketAuthenticator $authenticator,
         private readonly ConnectionRegistry $registry,
+        private readonly GlobalChatRegistry $globalChatRegistry,
+        private readonly GameRoomPlayersRegistry $gameRoomPlayersRegistry,
         private readonly GroupReadProvider $groupReadProvider,
         private readonly PrivateRoomReadProvider $privateRoomReadProvider,
         private readonly SerializerInterface $serializer,
@@ -74,6 +79,9 @@ class WebSocketServer implements MessageComponentInterface
 
                 $this->userStatusHandler->notifyFriendsAboutStatusChange($from, true);
                 $this->userStatusHandler->sendOnlineFriendsList($from);
+                $this->userStatusHandler->notifyGroupMembersAboutStatusChange($from, true);
+                $this->userStatusHandler->sendOnlineGroupMembersList($from);
+
 
 
                 // Envoi des groupes
@@ -117,7 +125,7 @@ class WebSocketServer implements MessageComponentInterface
             return;
         }
 
-        // ✅ Route le message JSON au handler approprié
+        // Route le message JSON au handler approprié
         $this->router->handle($from, $msg);
     }
 
@@ -126,6 +134,8 @@ class WebSocketServer implements MessageComponentInterface
         if (isset($conn->user)) {
             $this->registry->unregister($conn->user->getId());
             $this->userStatusHandler->notifyFriendsAboutStatusChange($conn, false);
+            $this->userStatusHandler->notifyGroupMembersAboutStatusChange($conn, false);
+            $this->globalChatRegistry->remove($conn);
             echo "🔴 Déconnexion de l'utilisateur ID {$conn->user->getId()}\n";
         } else {
             echo "🔌 Déconnexion d'un client non authentifié\n";

@@ -10,10 +10,12 @@ use Symfony\Component\Dotenv\Dotenv;
 use App\WebSocket\Router\MessageRouter;
 use App\Security\WebSocketAuthenticator;
 use App\WebSocket\Connection\ConnectionRegistry;
+use App\WebSocket\Connection\GlobalChatRegistry;
 use App\State\Websocket\Group\GroupReadProvider;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\WebSocket\Handler\UserStatusHandler;
 use App\State\WebSocket\Group\PrivateRoomReadProvider;
+use App\WebSocket\Connection\GameRoomPlayersRegistry;
 
 use React\Socket\SocketServer;
 use React\Socket\SecureServer;
@@ -54,6 +56,8 @@ try {
 $authenticator = $container->get(WebSocketAuthenticator::class);
 $router = $container->get(MessageRouter::class);
 $registry = $container->get(ConnectionRegistry::class);
+$globalChatRegistry = $container->get(GlobalChatRegistry::class);
+$gameRoomPlayersRegistry = $container->get(GameRoomPlayersRegistry::class);
 $groupReadProvider = $container->get(GroupReadProvider::class);
 $privateRoomReadProvider = $container->get(PrivateRoomReadProvider::class);
 $serializer = $container->get(SerializerInterface::class);
@@ -76,6 +80,8 @@ $httpServer = new HttpServer(
             $router,
             $authenticator,
             $registry,
+            $globalChatRegistry,
+            $gameRoomPlayersRegistry,
             $groupReadProvider,
             $privateRoomReadProvider,
             $serializer,

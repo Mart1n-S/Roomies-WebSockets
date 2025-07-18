@@ -6,7 +6,29 @@
             <BaseButton iconLeft variant="secondary" noIconSpace class="!w-12 !h-12 !p-0 justify-center"
                 :class="dashboardClass" title="Tableau de bord" @click="navigateTo('/dashboard')">
                 <template #icon-left>
-                    <i class="text-lg pi pi-home" />
+                    <i class="text-lg pi pi-discord" />
+                </template>
+            </BaseButton>
+
+            <!-- Chat global -->
+            <BaseButton iconLeft variant="secondary" noIconSpace class="!w-12 !h-12 !p-0 justify-center"
+                :class="globalChatClass" title="Chat global" @click="navigateTo('/global/chat')">
+                <template #icon-left>
+                    <i class="text-lg pi pi-globe" />
+                </template>
+            </BaseButton>
+
+            <BaseButton iconLeft variant="secondary" noIconSpace class="!w-12 !h-12 !p-0 justify-center"
+                :class="gamesClass" title="Jeux en ligne" @click="navigateTo('/games')">
+                <template #icon-left>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round" stroke-width="1.5" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 16.5H2v5h20v-5Z"></path>
+                        <path d="M19 13h-6v3.5h6V13Z"></path>
+                        <path d="M9 7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path>
+                        <path d="m8 7-3.5 9.5"></path>
+                    </svg>
                 </template>
             </BaseButton>
         </div>
@@ -18,7 +40,7 @@
             <div class="flex flex-col items-center space-y-3">
                 <BaseButton v-for="room in rooms" :key="room.id" variant="secondary"
                     class="!w-12 !h-12 !p-0 text-sm font-bold justify-center" :class="roomClass(room.id)"
-                    :title="room.name" @click="navigateTo(`/room/${room.id}`)">
+                    :title="room.name" @click="navigateTo(`/serveur/chat/${room.id}`)">
                     {{ getRoomLabel(room.name) }}
                 </BaseButton>
             </div>
@@ -81,8 +103,20 @@ const settingsClass = computed(() =>
         : '!rounded-2xl hover:!rounded-xl'
 )
 
+const globalChatClass = computed(() =>
+    route.path === '/global/chat'
+        ? '!bg-roomies-blue !rounded-xl'
+        : '!rounded-2xl hover:!rounded-xl'
+)
+
+const gamesClass = computed(() =>
+    route.path === '/games'
+        ? '!bg-roomies-blue !rounded-xl'
+        : '!rounded-2xl hover:!rounded-xl'
+)
+
 const roomClass = (roomId: string) => {
-    return route.path === `/room/${roomId}`
+    return route.path === `/serveur/chat/${roomId}`
         ? '!bg-roomies-blue !rounded-xl'
         : '!rounded-2xl hover:!rounded-xl'
 }

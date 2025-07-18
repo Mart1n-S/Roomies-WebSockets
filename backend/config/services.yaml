@@ -73,16 +73,20 @@ services:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"
 
-  App\Mapper\FriendshipMapper:
-    arguments:
-      $avatarPublicPath: "%app.user_avatar_public_path%"
-
   App\Service\AvatarUrlGeneratorService:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"
       $baseUrl: "%app.base_url%"
 
   App\WebSocket\Connection\ConnectionRegistry:
+    public: true
+    autowire: true
+
+  App\WebSocket\Connection\GlobalChatRegistry:
+    public: true
+    shared: true
+
+  App\WebSocket\Connection\GameRoomPlayersRegistry:
     public: true
     autowire: true
 

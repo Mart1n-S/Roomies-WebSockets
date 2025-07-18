@@ -51,10 +51,6 @@ class UpdateLastSeenHandler implements WebSocketHandlerInterface
                 'unreadCount' => (int) $unreadCount,
             ]));
         } catch (\Throwable $e) {
-            $conn->send(json_encode([
-                'type' => 'error',
-                'message' => 'Erreur mise à jour lastSeen: ' . $e->getMessage(),
-            ]));
         }
     }
 }

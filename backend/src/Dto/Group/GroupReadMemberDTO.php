@@ -8,15 +8,15 @@ use Symfony\Component\Uid\Uuid;
 
 class GroupReadMemberDTO
 {
-    #[Groups(['read:group'])]
+    #[Groups(['read:group', 'read:friendshipWithRoom'])]
     public Uuid $id;
 
-    #[Groups(['read:group'])]
+    #[Groups(['read:group', 'read:friendshipWithRoom'])]
     public UserReadDTO $member;
 
-    #[Groups(['read:group'])]
+    #[Groups(['read:group', 'read:friendshipWithRoom'])]
     public bool $isVisible;
 
-    #[Groups(['read:group'])]
+    #[Groups(['read:group', 'read:friendshipWithRoom'])]
     public string $role;
 }

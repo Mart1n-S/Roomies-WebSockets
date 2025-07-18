@@ -95,7 +95,55 @@ const routes = [
           title: 'Mes amis - Roomies'
         }
       }
-
+    ]
+  },
+  {
+    path: '/global/chat',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'global.chat',
+        component: () => import('@/views/GlobalChatView.vue'),
+        meta: {
+          title: 'Chat global - Roomies'
+        }
+      }
+    ]
+  },
+  {
+    path: '/games',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'games.list',
+        component: () => import('@/views/LobbyView.vue'),
+        meta: { title: 'Jeux en ligne - Roomies' }
+      },
+      {
+        path: '/room/:roomId',
+        name: 'games.room',
+        component: () => import('@/views/GamesView.vue'),
+        meta: { title: 'Jeux en ligne - Roomies' }
+      },
+    ]
+  },
+  {
+    path: '/serveur',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'chat/:roomId',
+        name: 'serveurChat.private',
+        component: () => import('@/views/PrivateServeurChatView.vue'),
+        meta: {
+          title: 'Conversation de groupe - Roomies'
+        }
+      }
     ]
   },
   {
