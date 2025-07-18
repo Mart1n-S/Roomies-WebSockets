@@ -5,7 +5,7 @@
         <div
             class="bg-roomies-gray4 rounded-2xl shadow-2xl px-8 py-7 flex flex-col items-center relative min-w-[320px] border border-roomies-gray2">
 
-            <!-- Fermer (BaseButton, variant=secondary, iconOnly, rounded-full) -->
+            <!-- Fermer -->
             <BaseButton variant="secondary"
                 class="!p-1.5 !w-9 !h-9 absolute top-4 right-4 rounded-full border border-roomies-gray2 shadow hover:bg-roomies-gray2/70 transition"
                 iconLeft @click="close" :aria-label="'Fermer la fenêtre'" noIconSpace>
@@ -13,7 +13,6 @@
                     <i class="text-lg pi pi-times" />
                 </template>
             </BaseButton>
-
 
             <img :src="user.avatar" class="w-24 h-24 mb-3 border-4 rounded-full shadow-lg border-roomies-gray3"
                 :alt="user.pseudo" />
@@ -33,6 +32,7 @@
                 </BaseButton>
             </div>
 
+            <!-- Bouton ajouter ami -->
             <BaseButton variant="primary" class="w-full mt-2" :disabled="isMe || isFriend || isPending || isReceived"
                 @click="addFriend">
                 <template v-if="isMe">C'est toi</template>
@@ -42,12 +42,16 @@
                 <template v-else>Ajouter en ami</template>
             </BaseButton>
 
+            <!-- Bouton "Supprimer du serveur" -->
+            <BaseButton v-if="showKickButton" variant="danger" class="w-full mt-4" @click="kickMember">
+                Supprimer du serveur
+            </BaseButton>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useFriendshipStore } from '@/stores/friendshipStore'
@@ -55,11 +59,15 @@ import type { UserPublic } from '@/models/User'
 
 const props = defineProps<{
     user: UserPublic | null
+    // Props serveur (optionnelles)
+    currentUserRole?: 'owner' | 'admin' | 'user'
+    memberRole?: 'owner' | 'admin' | 'user'
 }>()
 
 const emit = defineEmits<{
     (e: 'close'): void
     (e: 'add-friend', friendCode: string): void
+    (e: 'kick'): void
 }>()
 
 const authStore = useAuthStore()
@@ -67,19 +75,27 @@ const friendshipStore = useFriendshipStore()
 
 const isMe = computed(() => props.user?.friendCode === authStore.user?.friendCode)
 const isFriend = computed(() =>
-    !!props.user &&
-    friendshipStore.friendUsers.some(f => f.friendCode === props.user?.friendCode)
+    !!props.user && friendshipStore.friendUsers.some(f => f.friendCode === props.user?.friendCode)
 )
 const isPending = computed(() =>
-    !!props.user && friendshipStore.sentRequests.some(req =>
-        req.friend?.friendCode === props.user!.friendCode
-    )
+    !!props.user && friendshipStore.sentRequests.some(req => req.friend?.friendCode === props.user!.friendCode)
 )
 const isReceived = computed(() =>
-    !!props.user && friendshipStore.receivedRequests.some(req =>
-        req.friend?.friendCode === props.user!.friendCode
-    )
+    !!props.user && friendshipStore.receivedRequests.some(req => req.friend?.friendCode === props.user!.friendCode)
 )
+
+// Logique "kick"
+const showKickButton = computed(() => {
+    if (!props.user || !props.currentUserRole || !props.memberRole) return false
+    if (isMe.value) return false
+    if (props.currentUserRole === 'owner') {
+        return props.memberRole !== 'owner'
+    }
+    if (props.currentUserRole === 'admin') {
+        return props.memberRole === 'user'
+    }
+    return false
+})
 
 const copied = ref(false)
 function copyCode() {
@@ -91,6 +107,10 @@ function copyCode() {
 function addFriend() {
     if (!props.user || isMe.value || isFriend.value || isPending.value || isReceived.value) return
     emit('add-friend', props.user.friendCode)
+    emit('close')
+}
+function kickMember() {
+    emit('kick')
     emit('close')
 }
 function close() {

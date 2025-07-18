@@ -94,4 +94,23 @@ class RoomRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * Récupère toutes les rooms de type groupe (isGroup = true)
+     * auxquelles appartient l’utilisateur donné.
+     *
+     * @param User $user
+     * @return Room[]
+     */
+    public function findGroupsForUser(User $user): array
+    {
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.members', 'ru')
+            ->where('ru.user = :user')
+            ->andWhere('r.isGroup = true')
+            ->setParameter('user', $user->getId()->toBinary())
+            ->orderBy('r.name', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

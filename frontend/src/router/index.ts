@@ -132,6 +132,21 @@ const routes = [
     ]
   },
   {
+    path: '/serveur',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'chat/:roomId',
+        name: 'serveurChat.private',
+        component: () => import('@/views/PrivateServeurChatView.vue'),
+        meta: {
+          title: 'Conversation de groupe - Roomies'
+        }
+      }
+    ]
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }
