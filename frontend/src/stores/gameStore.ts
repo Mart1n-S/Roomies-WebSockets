@@ -148,9 +148,15 @@ export const useGameStore = defineStore('game', () => {
         chatMessagesByRoom.value[roomId].push(message)
     }
 
+    const removeRoom = (roomId: string) => {
+        rooms.value = rooms.value.filter(r => String(r.id) !== String(roomId))
+        delete chatMessagesByRoom.value[roomId]
+    }
+
+
     return {
         // Lobby
-        rooms, isLoading, setRooms, addRoom, fetchRooms, createRoom,
+        rooms, isLoading, setRooms, addRoom, fetchRooms, createRoom, removeRoom,
         // Room courante
         currentRoomPlayers, currentRoomId, setCurrentRoomPlayers, addPlayerToCurrentRoom, removePlayerFromCurrentRoom, resetCurrentRoom, incrementViewerCount,
         // Morpion

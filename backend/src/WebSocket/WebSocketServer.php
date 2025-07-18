@@ -79,6 +79,9 @@ class WebSocketServer implements MessageComponentInterface
 
                 $this->userStatusHandler->notifyFriendsAboutStatusChange($from, true);
                 $this->userStatusHandler->sendOnlineFriendsList($from);
+                $this->userStatusHandler->notifyGroupMembersAboutStatusChange($from, true);
+                $this->userStatusHandler->sendOnlineGroupMembersList($from);
+
 
 
                 // Envoi des groupes
@@ -131,6 +134,7 @@ class WebSocketServer implements MessageComponentInterface
         if (isset($conn->user)) {
             $this->registry->unregister($conn->user->getId());
             $this->userStatusHandler->notifyFriendsAboutStatusChange($conn, false);
+            $this->userStatusHandler->notifyGroupMembersAboutStatusChange($conn, false);
             $this->globalChatRegistry->remove($conn);
             echo "🔴 Déconnexion de l'utilisateur ID {$conn->user->getId()}\n";
         } else {

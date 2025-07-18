@@ -40,7 +40,7 @@
             <div class="flex flex-col items-center space-y-3">
                 <BaseButton v-for="room in rooms" :key="room.id" variant="secondary"
                     class="!w-12 !h-12 !p-0 text-sm font-bold justify-center" :class="roomClass(room.id)"
-                    :title="room.name" @click="navigateTo(`/room/${room.id}`)">
+                    :title="room.name" @click="navigateTo(`/serveur/chat/${room.id}`)">
                     {{ getRoomLabel(room.name) }}
                 </BaseButton>
             </div>
@@ -116,7 +116,7 @@ const gamesClass = computed(() =>
 )
 
 const roomClass = (roomId: string) => {
-    return route.path === `/room/${roomId}`
+    return route.path === `/serveur/chat/${roomId}`
         ? '!bg-roomies-blue !rounded-xl'
         : '!rounded-2xl hover:!rounded-xl'
 }

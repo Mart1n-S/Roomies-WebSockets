@@ -1,8 +1,8 @@
 <template>
-    <div class="flex flex-col items-center gap-2 p-4 shadow bg-roomies-gray3 rounded-xl">
+    <div class="relative flex flex-col items-center gap-2 p-4 shadow bg-roomies-gray3 rounded-xl">
         <img src="@/assets/images/morpion.svg" alt="Jeu" class="w-40 h-40 rounded-lg" />
 
-        <h3 class="text-lg font-bold text-white">{{ room.name }}</h3>
+        <h3 class="text-lg font-bold text-center text-white break-all">{{ room.name }}</h3>
         <p class="text-sm text-blue-400">{{ gameLabel }}</p>
 
         <div class="flex items-center gap-2 mt-2">
@@ -13,7 +13,7 @@
         <!-- Nombre de joueurs avec couleur dynamique -->
         <div class="mt-2 text-xs font-semibold" :class="room.playersCount >= 2 ? 'text-red-400' : 'text-green-400'">
             <i class="mr-1 pi pi-users" />
-            {{ room.playersCount }} / 2
+            {{ room.playersCount ?? 0 }} / 2
         </div>
 
         <!-- Nombre de spectateurs en violet -->
@@ -29,17 +29,52 @@
         <BaseButton class="w-full mt-2" variant="secondary" @click="$emit('watch', room)">
             Regarder en spectateur
         </BaseButton>
+
+        <!-- Bouton Supprimer si propriétaire -->
+        <BaseButton v-if="isOwner" variant="danger" class="w-full mt-2" @click.stop="showDeleteModal = true">
+            <template #icon-left>
+                <i class="pi pi-trash" />
+            </template>
+            Supprimer la partie
+        </BaseButton>
+
+        <!-- Modal confirmation -->
+        <ConfirmDeleteModal v-if="showDeleteModal" title="Supprimer la partie"
+            message="Supprimer cette partie ? Cette action est irréversible." :onConfirm="deleteRoom"
+            @close="showDeleteModal = false" />
     </div>
 </template>
 
 <script setup lang="ts">
 import type { RoomCard } from '@/models/RoomCard'
 import BaseButton from '@/components/base/BaseButton.vue'
-import { computed } from 'vue'
+import ConfirmDeleteModal from '@/components/base/ConfirmDeleteModal.vue'
+import { computed, ref } from 'vue'
+import { useAuthStore } from '@/stores/authStore'
+import { useWebSocketStore } from '@/stores/wsStore'
 
 const props = defineProps<{ room: RoomCard }>()
+const emit = defineEmits(['join', 'watch'])
+
+const authStore = useAuthStore()
+const wsStore = useWebSocketStore()
+
+const showDeleteModal = ref(false)
 
 const gameLabel = computed(() =>
     props.room.game === 'morpion' ? 'Morpion' : props.room.game
 )
+
+const isOwner = computed(() =>
+    authStore.user?.friendCode && props.room.creator.friendCode === authStore.user.friendCode
+)
+
+// Envoie la suppression
+function deleteRoom() {
+    wsStore.send({
+        type: 'game_room_delete',
+        payload: { roomId: props.room.id }
+    })
+    showDeleteModal.value = false
+}
 </script>

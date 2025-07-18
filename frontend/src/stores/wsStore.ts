@@ -394,6 +394,77 @@ export const useWebSocketStore = defineStore('ws', {
             }
 
             /**
+             * Suppression d'une room de jeu
+             */
+            if (data.type === 'game_room_deleted') {
+                const gameStore = useGameStore()
+                const toast = useToast()
+
+                // Solution 1: Utiliser la valeur directement depuis le store
+                const currentRoomId = gameStore.currentRoomId
+
+                gameStore.removeRoom(data.roomId)
+
+                // Comparaison des IDs en tant que strings
+                if (String(currentRoomId) === String(data.roomId)) {
+                    gameStore.resetCurrentRoom()
+                    router.push('/games')
+                    toast.info('La partie a été supprimée.')
+                }
+            }
+
+            if (data.type === 'group_updated') {
+                const roomStore = useRoomStore()
+                const updatedRoom = data.room
+                const index = roomStore.rooms.findIndex(r => r.id === updatedRoom.id)
+
+                if (index !== -1) {
+                    roomStore.rooms[index] = updatedRoom
+                } else {
+                    roomStore.rooms.push(updatedRoom)
+                }
+            }
+
+            if (data.type === 'group_deleted') {
+                const roomStore = useRoomStore()
+                const chatStore = useChatStore()
+                const toast = useToast()
+
+                const roomId = data.roomId
+                const currentRoomId = router.currentRoute.value.params.roomId
+
+                roomStore.removeRoom(roomId)
+                chatStore.clearRoomData(roomId)
+
+                if (currentRoomId === roomId) {
+                    router.push('/dashboard')
+                    toast.info('Le groupe a été supprimé.')
+                }
+            }
+
+            if (data.type === 'group_kicked') {
+                const roomStore = useRoomStore()
+                const chatStore = useChatStore()
+                const toast = useToast()
+
+                const roomId = data.roomId
+                const currentRoomId = router.currentRoute.value.params.roomId
+
+                // Retire la room de la sidebar
+                roomStore.removeRoom(roomId)
+                // Vide le chat de la room
+                chatStore.clearRoomData(roomId)
+
+                if (currentRoomId === roomId) {
+                    router.push('/dashboard')
+                    toast.info('Tu as été retiré du serveur.')
+                } else {
+                    toast.info('Tu as été retiré d\'un serveur.')
+                }
+            }
+
+
+            /**
              * Gestion des erreurs WebSocket
              */
             if (data.type === 'error') {

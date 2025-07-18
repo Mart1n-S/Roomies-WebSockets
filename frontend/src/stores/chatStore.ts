@@ -47,8 +47,14 @@ export const useChatStore = defineStore('chat', {
         async loadInitialMessages(roomId: string) {
             this.isLoading = true
             try {
+                // Réinitialisation complète avant chargement
+                delete this.messagesByRoom[roomId]
+                delete this.currentPage[roomId]
+                delete this.hasMore[roomId]
+
                 const messages = await fetchMessages(roomId)
                 this.setMessages(roomId, messages)
+
                 this.currentPage[roomId] = 1
                 this.hasMore[roomId] = messages.length > 0
             } catch (error) {
@@ -170,6 +176,14 @@ export const useChatStore = defineStore('chat', {
          */
         clearMessages(roomId: string) {
             delete this.messagesByRoom[roomId]
+        },
+
+        clearRoomData(roomId: string) {
+            delete this.messagesByRoom[roomId]
+            delete this.currentPage[roomId]
+            delete this.hasMore[roomId]
+            delete this.unreadCounts[roomId]
         }
+
     }
 })

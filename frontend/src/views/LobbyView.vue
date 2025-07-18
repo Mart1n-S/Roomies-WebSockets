@@ -18,6 +18,7 @@
                         <option value="all">Toutes les parties</option>
                         <option value="joinable">Parties rejoignables (1/2)</option>
                         <option value="empty">Parties vides (0/2)</option>
+                        <option value="mine">Mes parties</option>
                     </select>
                 </div>
             </div>
@@ -60,6 +61,7 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import BaseInput from '@/components/base/BaseInput.vue'
 import GameCreateModalForm from '@/components/form/GameCreateModalForm.vue'
 import type { RoomCard } from '@/models/RoomCard'
+import { useAuthStore } from '@/stores/authStore'
 
 const showModal = ref(false)
 const search = ref('')
@@ -67,6 +69,7 @@ const filter = ref<'all' | 'joinable' | 'empty'>('all')
 
 const gameStore = useGameStore()
 const wsStore = useWebSocketStore()
+const authStore = useAuthStore()
 
 onMounted(() => {
     gameStore.fetchRooms()
@@ -75,14 +78,22 @@ onMounted(() => {
 // Appliquer recherche + filtre
 const filteredRooms = computed(() => {
     const query = search.value.trim().toLowerCase()
+    const myFriendCode = authStore.user?.friendCode
 
     return gameStore.rooms.filter(room => {
         const matchName = room.name.toLowerCase().includes(query)
 
-        const matchFilter =
-            filter.value === 'all' ||
-            (filter.value === 'joinable' && room.playersCount === 1) ||
-            (filter.value === 'empty' && room.playersCount === 0)
+        let matchFilter = false
+
+        if (filter.value === 'all') {
+            matchFilter = true
+        } else if (filter.value === 'joinable') {
+            matchFilter = room.playersCount === 1
+        } else if (filter.value === 'empty') {
+            matchFilter = room.playersCount === 0
+        } else if (filter.value === 'mine') {
+            matchFilter = !!myFriendCode && room.creator.friendCode === myFriendCode
+        }
 
         return matchName && matchFilter
     })
