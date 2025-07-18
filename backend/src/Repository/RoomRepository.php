@@ -6,6 +6,8 @@ use App\Entity\Room;
 use App\Entity\User;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Symfony\Component\Uid\Uuid;
+
 
 /**
  * @extends ServiceEntityRepository<Room>
@@ -54,5 +56,61 @@ class RoomRepository extends ServiceEntityRepository
             ->setParameter('b', $b->getId()->toBinary());
 
         return $qb->getQuery()->getOneOrNullResult();
+    }
+
+    /**
+     * Récupère toutes les discussions privées (isGroup = false) auxquelles appartient l’utilisateur.
+     *
+     * @param User $user
+     * @return Room[]
+     */
+    public function findPrivateRoomsByUser(User $user): array
+    {
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.members', 'ru')
+            ->where('ru.user = :user')
+            ->andWhere('r.isGroup = false')
+            ->setParameter('user', $user->getId()->toBinary())
+            ->orderBy('r.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Trouve une room par son ID et l'utilisateur associé.
+     *
+     * @param string $roomId
+     * @param User $user
+     * @return Room|null
+     */
+    public function findOneByIdAndUser(string $roomId, User $user): ?Room
+    {
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.members', 'ru')
+            ->where('r.id = :roomId')
+            ->andWhere('ru.user = :user')
+            ->setParameter('roomId', Uuid::fromString($roomId)->toBinary())
+            ->setParameter('user', $user->getId()->toBinary())
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Récupère toutes les rooms de type groupe (isGroup = true)
+     * auxquelles appartient l’utilisateur donné.
+     *
+     * @param User $user
+     * @return Room[]
+     */
+    public function findGroupsForUser(User $user): array
+    {
+        return $this->createQueryBuilder('r')
+            ->innerJoin('r.members', 'ru')
+            ->where('ru.user = :user')
+            ->andWhere('r.isGroup = true')
+            ->setParameter('user', $user->getId()->toBinary())
+            ->orderBy('r.name', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 }

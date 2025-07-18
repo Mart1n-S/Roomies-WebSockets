@@ -78,7 +78,10 @@ TODO: Finaliser l'authentification
   
 - Ajouter la gestion de la déconnexion -> backend ok reste a mettre cote front
 
-- creer le dashboard
+- creer le dashboard =>ok
+- Creer l'ajout d'un chat avec un amies donc le rendre de nouveau visible => Ok 
+- ajouter des amies
+- administrer ses amitiés
 - Connecter le fais de recuperer les rooms du user 
 - Creer la page profil du user 
 - creer une modal qui permet de créer une room

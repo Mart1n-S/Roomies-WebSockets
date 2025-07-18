@@ -85,11 +85,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: RoomUser::class, mappedBy: 'user', orphanRemoval: true)]
     private Collection $roomMemberships;
 
+    /**
+     * @var Collection<int, GameRoom>
+     */
+    #[ORM\OneToMany(targetEntity: GameRoom::class, mappedBy: 'creator')]
+    private Collection $gameRooms;
+
     public function __construct()
     {
         $this->friendRequestsSent = new ArrayCollection();
         $this->receivedFriendships = new ArrayCollection();
         $this->roomMemberships = new ArrayCollection();
+        $this->gameRooms = new ArrayCollection();
     }
 
     public function getId(): ?Uuid
@@ -284,6 +291,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($roomUser->getUser() === $this) {
                 $roomUser->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, GameRoom>
+     */
+    public function getGameRooms(): Collection
+    {
+        return $this->gameRooms;
+    }
+
+    public function addGameRoom(GameRoom $gameRoom): static
+    {
+        if (!$this->gameRooms->contains($gameRoom)) {
+            $this->gameRooms->add($gameRoom);
+            $gameRoom->setCreator($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGameRoom(GameRoom $gameRoom): static
+    {
+        if ($this->gameRooms->removeElement($gameRoom)) {
+            // set the owning side to null (unless already changed)
+            if ($gameRoom->getCreator() === $this) {
+                $gameRoom->setCreator(null);
             }
         }
 

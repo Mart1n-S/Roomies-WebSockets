@@ -10,12 +10,19 @@ use App\Dto\Group\GroupReadDTO;
 use App\Dto\Group\GroupCreateDTO;
 use App\Dto\Group\GroupAddMemberDTO;
 use ApiPlatform\Metadata\ApiResource;
+use App\State\Group\GroupReadProvider;
+use ApiPlatform\Metadata\GetCollection;
+use App\Dto\Group\GroupLastSeenPatchDTO;
 use App\State\Group\GroupCreateProcessor;
 use App\Dto\Group\GroupMemberRolePatchDTO;
 use ApiPlatform\Doctrine\Orm\State\Options;
 use App\State\Group\GroupAddMemberProcessor;
+use App\State\Group\GroupLastSeenPatchProcessor;
 use App\State\Group\GroupMemberRolePatchProcessor;
+use App\Dto\Group\GroupPrivateChatVisibilityPatchDTO;
+use App\State\Group\GroupPrivateChatVisibilityPatchProcessor;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+
 
 #[ApiResource(
     shortName: 'Group Discussion',
@@ -111,6 +118,10 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                                                             'friendCode' => ['type' => 'string', 'example' => 'FDBC1A9674538ECC13CC']
                                                         ]
                                                     ],
+                                                    'isVisible' => [
+                                                        'type' => 'boolean',
+                                                        'example' => true
+                                                    ],
                                                     'role' => [
                                                         'type' => 'string',
                                                         'example' => 'owner',
@@ -203,6 +214,10 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                                                             'avatar' => ['type' => 'string', 'example' => 'jean.png'],
                                                             'friendCode' => ['type' => 'string', 'example' => 'FDBC1A9674538ECC13CC']
                                                         ]
+                                                    ],
+                                                    'isVisible' => [
+                                                        'type' => 'boolean',
+                                                        'example' => true
                                                     ],
                                                     'role' => [
                                                         'type' => 'string',
@@ -305,6 +320,10 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                                                             'friendCode' => ['type' => 'string', 'example' => 'FDBC1A9674538ECC13CC']
                                                         ]
                                                     ],
+                                                    'isVisible' => [
+                                                        'type' => 'boolean',
+                                                        'example' => true
+                                                    ],
                                                     'role' => [
                                                         'type' => 'string',
                                                         'example' => 'owner',
@@ -320,7 +339,126 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
                     ],
                 ]
             )
-        )
+        ),
+        new GetCollection(
+            uriTemplate: '/groups/private/chat',
+            name: 'myRoomsGetCollection',
+            provider: GroupReadProvider::class,
+            output: GroupReadDTO::class,
+            normalizationContext: ['groups' => ['read:group']],
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            description: 'Récupère toutes les discussions privées de l\'utilisateur.',
+            openapi: new Model\Operation(
+                summary: 'Liste des discussions privées de l’utilisateur.'
+            )
+        ),
+        new Patch(
+            uriTemplate: '/groups/private/chat/{id}/visibility',
+            input: GroupPrivateChatVisibilityPatchDTO::class,
+            processor: GroupPrivateChatVisibilityPatchProcessor::class,
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            denormalizationContext: [
+                'groups' => ['patch:chat:visibility'],
+                AbstractNormalizer::ALLOW_EXTRA_ATTRIBUTES => false
+            ],
+            openapi: new Model\Operation(
+                summary: 'Met à jour la visibilité d\'une discussion privée',
+                description: 'Permet de cacher ou afficher une discussion privée dans la liste des conversations',
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/merge-patch+json' => new Model\MediaType(
+                            schema: new \ArrayObject([
+                                'type' => 'object',
+                                'properties' => [
+                                    'isVisible' => [
+                                        'type' => 'boolean',
+                                        'example' => false,
+                                        'description' => 'Nouvel état de visibilité de la conversation'
+                                    ]
+                                ],
+                                'required' => ['isVisible']
+                            ])
+                        )
+                    ])
+                ),
+                responses: [
+                    '200' => [
+                        'description' => 'Visibilité mise à jour avec succès',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'message' => [
+                                            'type' => 'string',
+                                            'example' => 'Visibilité mise à jour'
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    '400' => [
+                        'description' => 'Requête invalide (mauvais format, ID invalide)'
+                    ],
+                    '401' => [
+                        'description' => 'Authentification requise'
+                    ],
+                    '403' => [
+                        'description' => 'Pas autorisé à modifier cette conversation'
+                    ],
+                    '404' => [
+                        'description' => 'Conversation introuvable'
+                    ]
+                ]
+            )
+        ),
+        // TODO: A supprimer
+        new Patch(
+            uriTemplate: '/groups/{id}/last-seen',
+            input: GroupLastSeenPatchDTO::class,
+            processor: GroupLastSeenPatchProcessor::class,
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            openapi: new Model\Operation(
+                summary: 'Mettre à jour la dernière visite de la discussion',
+                description: 'Mise à jour du champ lastSeenAt de l’utilisateur dans un groupe',
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'application/merge-patch+json' => new Model\MediaType(
+                            schema: new \ArrayObject([
+                                'type' => 'object',
+                                'properties' => [
+                                    'lastSeenAt' => [
+                                        'type' => 'string',
+                                        'format' => 'date-time',
+                                        'example' => '2025-07-14T15:30:00+00:00'
+                                    ]
+                                ]
+                            ])
+                        )
+                    ])
+                ),
+                responses: [
+                    '200' => [
+                        'description' => 'Dernière visite mise à jour',
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'properties' => [
+                                        'message' => [
+                                            'type' => 'string',
+                                            'example' => 'Dernière visite mise à jour'
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            )
+        ),
+
     ]
 )]
 final class GroupResource {}

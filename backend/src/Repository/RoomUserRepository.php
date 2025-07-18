@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Entity\RoomUser;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Symfony\Component\Uid\Uuid;
 
 /**
  * @extends ServiceEntityRepository<RoomUser>
@@ -51,5 +52,24 @@ class RoomUserRepository extends ServiceEntityRepository
             ->setParameter('userId', $user->getId()->toBinary())
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Trouve un RoomUser par l'utilisateur et l'ID de la room.
+     *
+     * @param User $user
+     * @param string $roomId
+     * @return RoomUser|null
+     */
+    public function findOneByUserAndRoomId(User $user, string $roomId): ?RoomUser
+    {
+        return $this->createQueryBuilder('ru')
+            ->join('ru.room', 'r')
+            ->where('r.id = :roomId')
+            ->andWhere('ru.user = :user')
+            ->setParameter('roomId', Uuid::fromString($roomId)->toBinary())
+            ->setParameter('user', $user->getId()->toBinary())
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

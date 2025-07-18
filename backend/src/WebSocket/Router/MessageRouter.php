@@ -32,6 +32,11 @@ class MessageRouter
                 throw new \InvalidArgumentException("Le champ 'type' est requis dans le message.");
             }
 
+            if ($type === 'ping') {
+                return;
+            }
+
+
             foreach ($this->handlers as $handler) {
                 if ($handler->supports($type)) {
                     $handler->handle($conn, $message);

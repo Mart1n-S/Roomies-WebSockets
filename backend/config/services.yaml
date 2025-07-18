@@ -5,6 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
   app.user_avatar_public_path: "%env(APP_USER_AVATAR_PUBLIC_PATH)%"
+  app.base_url: "%env(APP_BASE_URL)%"
   frontend_url: "%env(URL_FRONTEND)%"
 
 services:
@@ -72,15 +73,20 @@ services:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"
 
-  App\Mapper\FriendshipMapper:
+  App\Service\AvatarUrlGeneratorService:
     arguments:
       $avatarPublicPath: "%app.user_avatar_public_path%"
-
-  App\Mapper\GroupMapper:
-    arguments:
-      $avatarPublicPath: "%app.user_avatar_public_path%"
+      $baseUrl: "%app.base_url%"
 
   App\WebSocket\Connection\ConnectionRegistry:
+    public: true
+    autowire: true
+
+  App\WebSocket\Connection\GlobalChatRegistry:
+    public: true
+    shared: true
+
+  App\WebSocket\Connection\GameRoomPlayersRegistry:
     public: true
     autowire: true
 
@@ -98,15 +104,31 @@ services:
     autowire: true
     autoconfigure: true
 
+  App\State\WebSocket\Group\PrivateRoomReadProvider:
+    public: true
+    autowire: true
+    autoconfigure: true
+
   Symfony\Component\Serializer\SerializerInterface:
     public: true
     alias: serializer
 
+  # Ce bloc charge automatiquement tous les handlers WebSocket du dossier,
+  # mais en les enregistrant sans les rendre publics.
+  # Cela fonctionne pour les handlers utilisés uniquement via le router (MessageRouter).
   App\WebSocket\Handler\:
     resource: "../src/WebSocket/Handler"
     tags: ["app.websocket_handler"]
     autowire: true
     autoconfigure: false
+
+  # On redéclare explicitement UserStatusHandler ici POUR LE RENDRE PUBLIC
+  # car on en a besoin manuellement dans WebSocketServer (hors routing automatique).
+  # Cette déclaration DOIT venir APRÈS le bloc précédent, sinon elle sera écrasée.
+  App\WebSocket\Handler\UserStatusHandler:
+    public: true
+    autowire: true
+    autoconfigure: true
 
   App\WebSocket\Router\MessageRouter:
     public: true

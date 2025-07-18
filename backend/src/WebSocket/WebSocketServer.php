@@ -6,9 +6,14 @@ use Ratchet\ConnectionInterface;
 use Ratchet\MessageComponentInterface;
 use App\WebSocket\Router\MessageRouter;
 use App\Security\WebSocketAuthenticator;
-use App\WebSocket\Connection\ConnectionRegistry;
+use App\WebSocket\Handler\UserStatusHandler;
 use App\State\Websocket\Group\GroupReadProvider;
+use App\WebSocket\Connection\ConnectionRegistry;
+use App\WebSocket\Connection\GlobalChatRegistry;
+use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\State\WebSocket\Group\PrivateRoomReadProvider;
+
 
 
 class WebSocketServer implements MessageComponentInterface
@@ -17,8 +22,12 @@ class WebSocketServer implements MessageComponentInterface
         private readonly MessageRouter $router,
         private readonly WebSocketAuthenticator $authenticator,
         private readonly ConnectionRegistry $registry,
+        private readonly GlobalChatRegistry $globalChatRegistry,
+        private readonly GameRoomPlayersRegistry $gameRoomPlayersRegistry,
         private readonly GroupReadProvider $groupReadProvider,
-        private readonly SerializerInterface $serializer
+        private readonly PrivateRoomReadProvider $privateRoomReadProvider,
+        private readonly SerializerInterface $serializer,
+        private readonly UserStatusHandler $userStatusHandler
     ) {}
 
     public function onOpen(ConnectionInterface $conn): void
@@ -68,6 +77,13 @@ class WebSocketServer implements MessageComponentInterface
 
                 echo "✅ Utilisateur authentifié via message : {$user->getEmail()} (ID: {$user->getId()})\n";
 
+                $this->userStatusHandler->notifyFriendsAboutStatusChange($from, true);
+                $this->userStatusHandler->sendOnlineFriendsList($from);
+                $this->userStatusHandler->notifyGroupMembersAboutStatusChange($from, true);
+                $this->userStatusHandler->sendOnlineGroupMembersList($from);
+
+
+
                 // Envoi des groupes
                 $groups = $this->groupReadProvider->getGroupsForUser($user);
 
@@ -76,6 +92,18 @@ class WebSocketServer implements MessageComponentInterface
                 $from->send(json_encode([
                     'type' => 'init_groups',
                     'data' => json_decode($json, true),
+                ]));
+
+                // Envoi des discussions privées
+                $privateRooms = $this->privateRoomReadProvider->getPrivateRoomsForUser($user);
+
+                $privateJson = $this->serializer->serialize($privateRooms, 'json', [
+                    'groups' => ['read:group'],
+                ]);
+
+                $from->send(json_encode([
+                    'type' => 'init_private_rooms',
+                    'data' => json_decode($privateJson, true),
                 ]));
             } catch (\Throwable $e) {
                 $from->send(json_encode([
@@ -97,7 +125,7 @@ class WebSocketServer implements MessageComponentInterface
             return;
         }
 
-        // ✅ Route le message JSON au handler approprié
+        // Route le message JSON au handler approprié
         $this->router->handle($from, $msg);
     }
 
@@ -105,6 +133,9 @@ class WebSocketServer implements MessageComponentInterface
     {
         if (isset($conn->user)) {
             $this->registry->unregister($conn->user->getId());
+            $this->userStatusHandler->notifyFriendsAboutStatusChange($conn, false);
+            $this->userStatusHandler->notifyGroupMembersAboutStatusChange($conn, false);
+            $this->globalChatRegistry->remove($conn);
             echo "🔴 Déconnexion de l'utilisateur ID {$conn->user->getId()}\n";
         } else {
             echo "🔌 Déconnexion d'un client non authentifié\n";

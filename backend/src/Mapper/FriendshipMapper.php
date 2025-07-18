@@ -6,7 +6,7 @@ use App\Entity\User;
 use App\Entity\Friendship;
 use App\Dto\User\UserReadDTO;
 use App\Dto\Friendship\FriendshipReadDTO;
-use Symfony\Component\HttpFoundation\RequestStack;
+use App\Service\AvatarUrlGeneratorService;
 
 /**
  * Service de mapping entre Friendship et FriendshipReadDTO.
@@ -14,8 +14,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class FriendshipMapper
 {
     public function __construct(
-        private RequestStack $requestStack,
-        private string $avatarPublicPath
+        private AvatarUrlGeneratorService $avatarUrlGeneratorService
     ) {}
 
     /**
@@ -51,16 +50,12 @@ class FriendshipMapper
      * @param User $user
      * @return UserReadDTO
      */
-    private function mapUser(User $user): UserReadDTO
+    public function mapUser(User $user): UserReadDTO
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $baseUrl = $request ? $request->getSchemeAndHttpHost() : '';
-
         $dto = new UserReadDTO();
         $dto->pseudo = $user->getPseudo();
 
-        $avatar = $user->getImageName() ?: 'default-avatar.png';
-        $dto->avatar = rtrim($baseUrl . $this->avatarPublicPath, '/') . '/' . $avatar;
+        $dto->avatar = $this->avatarUrlGeneratorService->generate($user);
 
         $dto->friendCode = $user->getFriendCode();
 

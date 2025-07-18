@@ -11,7 +11,8 @@ export const useAuthStore = defineStore('auth', {
         user: null as User | null,
         loading: false,
         userFetched: false,
-        error: ''
+        error: '',
+        appReady: false,
     }),
 
     actions: {
@@ -34,6 +35,7 @@ export const useAuthStore = defineStore('auth', {
                 this.error = err.response?.data?.message || 'Erreur lors de la connexion.'
             } finally {
                 this.loading = false
+                this.appReady = true
             }
         },
 
@@ -68,6 +70,7 @@ export const useAuthStore = defineStore('auth', {
             } finally {
                 this.loading = false
                 this.userFetched = true
+                this.appReady = true
             }
         },
 
@@ -145,9 +148,10 @@ export const useAuthStore = defineStore('auth', {
 
                 this.user = null
                 this.userFetched = false
+                this.appReady = false
                 this.error = ''
                 this.loading = false
-                router.push('/login')
+                router.push('/')
             }
         },
 
