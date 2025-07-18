@@ -13,7 +13,7 @@ class AvatarUrlGeneratorService
 
     public function generate(?User $user): string
     {
-        $avatarFile = $user?->getImageName() ?: 'default-avatar.png';
+        $avatarFile = $user?->getImageName() ?: 'default-avatar.svg';
         return rtrim($this->baseUrl . $this->avatarPublicPath, '/') . '/' . $avatarFile;
     }
 }

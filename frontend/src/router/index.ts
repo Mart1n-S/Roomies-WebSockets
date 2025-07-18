@@ -147,6 +147,21 @@ const routes = [
     ]
   },
   {
+    path: '/settings',
+    component: () => import('@/layouts/AuthenticatedLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        name: 'settings',
+        component: () => import('@/views/ProfileSettingsView.vue'),
+        meta: {
+          title: 'Paramètres du profil - Roomies'
+        }
+      }
+    ]
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }

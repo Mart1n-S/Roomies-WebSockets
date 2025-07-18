@@ -49,8 +49,8 @@ final class UserCreateDTO
     #[Assert\File(
         maxSize: '5M',
         maxSizeMessage: 'Le fichier ne doit pas dépasser 5 Mo.',
-        mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
-        mimeTypesMessage: 'Le fichier doit être une image valide (JPEG, PNG, WEBP).'
+        mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'],
+        mimeTypesMessage: 'Le fichier doit être une image valide (JPEG, PNG, WEBP, SVG).'
     )]
     public ?UploadedFile $avatar = null;
 }

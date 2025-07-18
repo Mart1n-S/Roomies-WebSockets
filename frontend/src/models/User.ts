@@ -3,7 +3,7 @@ export interface User {
     email: string
     pseudo: string
     friendCode: string
-    avatarUrl: string | null
+    avatar: string
 }
 
 export interface UserPublic {

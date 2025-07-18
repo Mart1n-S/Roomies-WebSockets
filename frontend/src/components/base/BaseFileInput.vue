@@ -7,8 +7,8 @@
             @click="triggerFileInput">
             <i class="mb-1 text-3xl text-gray-400 pi pi-image"></i>
             <p class="text-xs text-gray-400">Cliquez pour sélectionner une image</p>
-            <input ref="fileInput" type="file" :id="name" :name="name" accept="image/png,image/jpeg,image/webp"
-                @change="handleChange" class="hidden" />
+            <input ref="fileInput" type="file" :id="name" :name="name"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml" @change="handleChange" class="hidden" />
         </div>
 
         <!-- Aperçu de l’image -->

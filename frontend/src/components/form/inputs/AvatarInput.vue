@@ -1,5 +1,6 @@
 <template>
-    <BaseFileInput :label="label" :name="name" :error="error" @change="handleChange" />
+    <BaseFileInput :label="label" :name="name" :error="error" accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        @change="handleChange" />
 </template>
 
 <script setup lang="ts">
@@ -28,12 +29,12 @@ function handleChange(event: Event) {
         return
     }
 
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp']
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']
     if (!validTypes.includes(file.type)) {
-        error.value = 'Format invalide (JPEG, PNG, WEBP uniquement).'
+        error.value = 'Format invalide (JPEG, PNG, WEBP, SVG uniquement).'
         emit('valid', false)
     } else if (file.size > 5 * 1024 * 1024) {
-        error.value = 'L’image ne doit pas dépasser 5 Mo.'
+        error.value = 'Le fichier ne doit pas dépasser 5 Mo.'
         emit('valid', false)
     } else {
         error.value = ''

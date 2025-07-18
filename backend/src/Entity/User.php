@@ -201,7 +201,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAvatar(?File $avatar = null): void
     {
         $this->avatar = $avatar;
+
+        if ($avatar !== null) {
+            $this->setUpdatedAt(new \DateTime());
+        }
     }
+
 
     public function getAvatar(): ?File
     {

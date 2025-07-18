@@ -4,7 +4,7 @@ namespace App\Mapper;
 
 use App\Entity\User;
 use App\Dto\User\UserReadDTO;
-use Symfony\Component\HttpFoundation\RequestStack;
+use App\Service\AvatarUrlGeneratorService;
 
 /**
  * Mapper pour transformer un User en UserReadDTO.
@@ -12,8 +12,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class UserMapper
 {
     public function __construct(
-        private RequestStack $requestStack,
-        private string $avatarPublicPath
+        private AvatarUrlGeneratorService $avatarUrlGenerator,
     ) {}
 
     /**
@@ -24,8 +23,6 @@ class UserMapper
      */
     public function toReadDto(User $user): UserReadDTO
     {
-        $request = $this->requestStack->getCurrentRequest();
-        $baseUrl = $request ? $request->getSchemeAndHttpHost() : '';
 
         $dto = new UserReadDTO();
         $dto->email = $user->getEmail();
@@ -33,8 +30,7 @@ class UserMapper
         $dto->roles = $user->getRoles();
         $dto->friendCode = $user->getFriendCode();
 
-        $avatarFile = $user->getImageName() ?: 'default-avatar.png';
-        $dto->avatar = rtrim($baseUrl . $this->avatarPublicPath, '/') . '/' . $avatarFile;
+        $dto->avatar = $this->avatarUrlGenerator->generate($user);
 
         return $dto;
     }

@@ -66,6 +66,15 @@
                     <i class="text-lg pi pi-cog" />
                 </template>
             </BaseButton>
+
+            <!-- Déconnexion -->
+            <BaseButton iconLeft variant="danger" noIconSpace class="!w-12 !h-12 !p-0 justify-center"
+                title="Déconnexion" @click="handleLogout">
+                <template #icon-left>
+                    <i class="text-lg pi pi-sign-out" />
+                </template>
+            </BaseButton>
+
         </div>
     </aside>
 </template>
@@ -76,12 +85,15 @@ import { computed } from 'vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 import { storeToRefs } from 'pinia'
 import { useRoomStore } from '@/stores/roomStore'
+import { useAuthStore } from '@/stores/authStore'
+
 
 const router = useRouter()
 const route = useRoute()
 
 const roomStore = useRoomStore()
 const { allRooms: rooms } = storeToRefs(roomStore)
+const authStore = useAuthStore()
 
 const navigateTo = (path: string) => {
     if (route.path !== path) {
@@ -137,6 +149,14 @@ function getRoomLabel(name: string): string {
         .slice(0, 3) // max 3 mots
         .map(word => word[0]?.toUpperCase() ?? '')
         .join('')
+}
+
+async function handleLogout() {
+    try {
+        await authStore.logout()
+    } catch (err) {
+        console.warn('Erreur lors du logout', err)
+    }
 }
 </script>
 

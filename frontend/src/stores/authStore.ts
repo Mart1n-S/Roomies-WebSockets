@@ -1,9 +1,10 @@
 // src/stores/authStore.ts
 import { defineStore } from 'pinia'
-import { login, register, getCurrentUser, requestPasswordReset, resetPassword, requestNewConfirmationEmail, logout } from '@/services/authService'
+import { login, register, getCurrentUser, requestPasswordReset, resetPassword, requestNewConfirmationEmail, updateProfile, logout } from '@/services/authService'
 import type { User } from '@/models/User'
 import { router } from '@/router'
 import { useWebSocketStore } from '@/stores/wsStore'
+import { disconnectWebSocket } from '@/services/websocket'
 
 
 export const useAuthStore = defineStore('auth', {
@@ -132,6 +133,26 @@ export const useAuthStore = defineStore('auth', {
         },
 
         /**
+         * Met à jour le profil utilisateur (pseudo, avatar, mot de passe).
+         * @param formData Données multipart (pseudo, avatar, currentPassword, newPassword…)
+         * @returns Promise<any>
+         */
+        async updateProfile(formData: FormData) {
+            this.resetError()
+            try {
+                this.loading = true
+                // On récupère la réponse (user mis à jour) !
+                const updatedUser = await updateProfile(formData)
+                this.user = updatedUser
+            } catch (err: any) {
+                this.error = err.response?.data?.message || 'Erreur lors de la mise à jour du profil.'
+                throw err
+            } finally {
+                this.loading = false
+            }
+        },
+
+        /**
          * Déconnecte l'utilisateur.
          */
         async logout() {
@@ -141,10 +162,7 @@ export const useAuthStore = defineStore('auth', {
             } catch (err) {
                 console.warn('Erreur lors du logout', err)
             } finally {
-                const wsStore = useWebSocketStore()
-                if (wsStore.isConnected) {
-                    wsStore.disconnect()
-                }
+                disconnectWebSocket()
 
                 this.user = null
                 this.userFetched = false
