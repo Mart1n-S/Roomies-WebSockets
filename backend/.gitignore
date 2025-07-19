@@ -15,3 +15,7 @@
 ###< lexik/jwt-authentication-bundle ###
 
 /certs/*pem
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###

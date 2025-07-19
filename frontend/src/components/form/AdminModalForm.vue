@@ -15,7 +15,7 @@
             </div>
 
             <!-- Liste des membres + rôles -->
-            <div class="space-y-2 overflow-y-auto max-h-64">
+            <div class="space-y-2 overflow-y-auto scrollbar max-h-64">
                 <p class="text-sm text-gray-300">Sélectionnez un rôle pour chaque membre (Admin ou Utilisateur)</p>
                 <template v-if="filteredMembers.length > 0">
                     <div v-for="member in filteredMembers" :key="member.friendCode"

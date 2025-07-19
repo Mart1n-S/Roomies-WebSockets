@@ -73,10 +73,10 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'home.private',
-        component: () => import('@/views/HomePrivateView.vue'),
+        name: 'friends.list',
+        component: () => import('@/views/FriendsView.vue'),
         meta: {
-          title: 'Tableau de bord - Roomies'
+          title: 'Mes amis - Roomies'
         }
       },
       {
@@ -85,14 +85,6 @@ const routes = [
         component: () => import('@/views/PrivateChatView.vue'),
         meta: {
           title: 'Conversation - Roomies'
-        }
-      },
-      {
-        path: 'friends',
-        name: 'friends.list',
-        component: () => import('@/views/FriendsView.vue'),
-        meta: {
-          title: 'Mes amis - Roomies'
         }
       }
     ]

@@ -1,5 +1,6 @@
 <template>
-    <aside class="flex flex-col items-center justify-between w-16 h-full py-4 bg-roomies-gray4">
+    <aside class="flex flex-col items-center justify-between w-16 h-full py-4 bg-roomies-gray4"
+        data-testid="sidebar-main">
         <!-- Partie haute -->
         <div class="flex flex-col items-center space-y-3">
             <!-- Dashboard -->
