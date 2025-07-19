@@ -19,7 +19,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-// TODO: Penser à ajuster la route dans services.yaml pour que le lien envoyer par mail soit correct
 final class SecurityController extends AbstractController
 {
     public function __construct(private UserRepository $userRepository, private RateLimiterFactory $rateLimiterFactory) {}

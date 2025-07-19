@@ -60,24 +60,6 @@ class MessageRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
-    // TODO: Garder car si onsupprime la room directement, on supprime les messages mais dans le doute on garde cette méthode
-    // /**
-    //  * TODO: A tester pour voir si cela supprime bien tous les messages entre deux utilisateurs
-    //  * Supprime tous les messages entre deux utilisateurs.
-    //  *
-    //  * @param User $userA Le premier utilisateur
-    //  * @param User $userB Le deuxième utilisateur
-    //  */
-    // public function deleteMessagesBetweenUsers(User $a, User $b): void
-    // {
-    //     $this->createQueryBuilder('m')
-    //         ->delete()
-    //         ->where('(m.sender = :a AND m.recipient = :b) OR (m.sender = :b AND m.recipient = :a)')
-    //         ->setParameter('a',  $a->getId()->toBinary())
-    //         ->setParameter('b', $b->getId()->toBinary())
-    //         ->getQuery()
-    //         ->execute();
-    // }
 
     /**
      * Récupère les messages d'une room avec pagination.

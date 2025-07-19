@@ -51,7 +51,7 @@ class GroupReadProvider implements ProviderInterface
             $roomUser = $room->getMembers()->filter(
                 fn(RoomUser $ru) => $ru->getUser() === $user
             )->first();
-            // TODO: a retravailler 
+
             if ($roomUser) {
                 $unreadCount = $this->messageRepository->countUnreadForRoomUser($roomUser);
                 $dto->unreadCount = $unreadCount;

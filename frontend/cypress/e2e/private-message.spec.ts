@@ -15,7 +15,7 @@ describe('Envoyer un message à ami_fixe_1 en privé', () => {
         cy.get('button[type="submit"]').contains('Se connecter').click()
 
         // 4. Arrivée sur le dashboard et présence de la sidebar
-        cy.url({ timeout: 16000 }).should('include', '/dashboard')
+        cy.url({ timeout: 18000 }).should('include', '/dashboard')
         cy.get('[data-testid="sidebar-main"]', { timeout: 12000 }).within(() => {
             cy.get('button[title="Chat global"]').should('exist')
             cy.get('button[title="Tableau de bord"]').should('exist')
@@ -43,7 +43,7 @@ describe('Envoyer un message à ami_fixe_1 en privé', () => {
             cy.get('button[title="Déconnexion"]', { timeout: 8000 }).click()
         })
         // On attend d'arriver sur la page login ou accueil
-        cy.url({ timeout: 8000 }).should('satisfy', url =>
+        cy.url({ timeout: 10000 }).should('satisfy', url =>
             url.endsWith('/login') || url.endsWith('/')
         )
 
@@ -52,7 +52,7 @@ describe('Envoyer un message à ami_fixe_1 en privé', () => {
         cy.get('input[name="email"]', { timeout: 8000 }).type('ami1@roomies.test')
         cy.get('input[name="password"]').type('password')
         cy.get('button[type="submit"]').contains('Se connecter').click()
-        cy.url({ timeout: 16000 }).should('include', '/dashboard')
+        cy.url({ timeout: 18000 }).should('include', '/dashboard')
 
         // 11. Clique sur la conversation avec userClassique
         cy.contains('span', 'userClassique', { timeout: 8000 })

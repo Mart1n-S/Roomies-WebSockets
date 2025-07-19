@@ -117,9 +117,8 @@ npm install
   
   ⚠️ Normalement, les certificats sont déjà fournis dans le projet, mais pour les régénérer :
   ```bash
-  openssl req -x509 -newkey rsa:2048 -nodes -keyout localhost-key.pem -out localhost-cert.pem -days 365 -subj "/CN=localhost"
+  openssl req -x509 -newkey rsa:2048 -nodes -keyout certs/localhost-key.pem -out certs/localhost-cert.pem -days 365 -subj "/CN=localhost"
   ```
-- Place les fichiers `localhost-key.pem` et `localhost-cert.pem` à la racine de `frontend/`.
 - Si tu as déjà les fichiers fournis (`localhost-key.pem`, `localhost-cert.pem`), tu peux les utiliser tels quels.
 
 ### 4. Générer les certificats pour Nginx (si besoin)
@@ -183,6 +182,13 @@ php bin/console d:f:l
 - phpMyAdmin : [http://localhost:8080/](http://localhost:8080/)  
 - Mailpit (emails de dev) : [http://localhost:8025/](http://localhost:8025/)
 
+---
+
+> **Note pratique** :  
+> Si vous souhaitez tester l’application avec **deux utilisateurs en simultané** sur la même machine, il faut utiliser **deux navigateurs différents** (ex : Chrome + Firefox), **ou** ouvrir un onglet en **navigation privée**.
+>
+> ⚠️ **Attention** : En navigation privée, il faudra **autoriser les cookies tiers**, car l’authentification s’appuie sur des cookies sécurisés.
+
 ## 📋 Gestion des tests
 
 L’application Roomies possède une couverture de tests aussi bien côté backend que côté frontend.
@@ -240,10 +246,4 @@ L’application Roomies possède une couverture de tests aussi bien côté backe
         - `create-game.spec.ts` : → Vérifie la création d’une nouvelle partie de jeu (ex : Morpion) : connexion, navigation vers la section jeux, ouverture du lobby, création d’une partie via la modal, et vérification de la présence de la partie dans le lobby.
         - `private-message.spec.ts` : → Vérifie l’envoi et la réception d’un message privé entre deux utilisateurs : connexion, ouverture d’une discussion privée, envoi d’un message, et vérification de l’affichage du message dans le chat.
 
----
-
-> **Note pratique** :  
-> Si vous souhaitez tester l’application avec **deux utilisateurs en simultané** sur la même machine, il faut utiliser **deux navigateurs différents** (ex : Chrome + Firefox), **ou** ouvrir un onglet en **navigation privée**.
->
-> ⚠️ **Attention** : En navigation privée, il faudra **autoriser les cookies tiers**, car l’authentification s’appuie sur des cookies sécurisés.
 
