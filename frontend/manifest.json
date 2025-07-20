@@ -1,0 +1,44 @@
+{
+  "name": "Roomies",
+  "short_name": "Roomies",
+  "description": "L'application communautaire pour jouer, discuter et organiser des salons comme sur Discord.",
+  "theme_color": "#5865F2",
+  "background_color": "#1a1b1e",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "id": "/",
+  "icons": [
+    {
+      "src": "roomies-icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "roomies-icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "roomies-icon-1200x1200.png",
+      "sizes": "1200x1200",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "roomies-preview-1-863x469.png",
+      "sizes": "863x469",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Exemple de salon Roomies"
+    },
+    {
+      "src": "roomies-preview-2-863x469.png",
+      "sizes": "863x469",
+      "type": "image/png",
+      "label": "Interface de chat Roomies"
+    }
+  ]
+}
