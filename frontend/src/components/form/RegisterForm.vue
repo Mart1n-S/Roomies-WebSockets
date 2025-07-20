@@ -50,10 +50,12 @@ import AvatarInput from '@/components/form/inputs/AvatarInput.vue'
 import PasswordInput from '@/components/form/inputs/PasswordInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
+// Initialisation des outils et stores
 const toast = useToast()
 const router = useRouter()
 const auth = useAuthStore()
 
+// Champs du formulaire (et messages d’erreur associés)
 const email = ref('')
 const emailError = ref('')
 const pseudo = ref('')
@@ -63,23 +65,37 @@ const avatarError = ref('')
 const password = ref('')
 const passwordError = ref('')
 
+// Indicateurs de validation individuelle
 const isEmailValid = ref(false)
 const isPseudoValid = ref(false)
-const isAvatarValid = ref(true)
+const isAvatarValid = ref(true) // avatar est optionnel selon les règles back, sinon mettre à false
 const isPasswordValid = ref(false)
 
+// Reset de l’erreur globale lors de l’affichage du composant
 auth.resetError()
+
+/**
+ * Gère la soumission du formulaire d’inscription.
+ * - Valide tous les champs (prérequis de validation des inputs enfants)
+ * - Construit le FormData pour un upload multipart (avatar)
+ * - Appelle le store d’auth pour la requête d’inscription
+ * - Gère les erreurs backend en les dispatchant sur les bons champs
+ * - Affiche des toasts en cas de succès ou d’échec général
+ */
 async function handleRegister() {
+    // Réinitialise les messages d’erreur avant validation/soumission
     emailError.value = ''
     pseudoError.value = ''
     avatarError.value = ''
     passwordError.value = ''
 
+    // Vérifie la validité de tous les champs
     if (!isEmailValid.value || !isPseudoValid.value || !isAvatarValid.value || !isPasswordValid.value) {
         toast.error('Merci de remplir tous les champs correctement.')
         return
     }
 
+    // Prépare le payload FormData pour upload (avatar = fichier)
     const formData = new FormData()
     formData.append('email', email.value)
     formData.append('pseudo', pseudo.value)
@@ -87,11 +103,11 @@ async function handleRegister() {
     if (avatar.value) formData.append('avatar', avatar.value)
 
     try {
-
         await auth.registerUser(formData)
         toast.success('Votre compte a été créé ! Vérifiez vos emails pour confirmer votre inscription.')
         router.push('/login')
     } catch (err: any) {
+        // Récupère les violations de validation renvoyées par l’API Platform
         const violations = err.response?.data?.violations
         if (Array.isArray(violations)) {
             for (const v of violations) {

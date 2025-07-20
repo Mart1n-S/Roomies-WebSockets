@@ -17,10 +17,18 @@
 <script setup lang="ts">
 import type { RoomMember } from '@/models/RoomMember'
 
+/**
+ * Props :
+ * - otherMember : objet RoomMember, contient les infos du correspondant (avatar, pseudo, statut en ligne…)
+ */
 defineProps<{
     otherMember: RoomMember
 }>()
 
+/**
+ * Événement custom émis lors du clic sur l’avatar/pseudo :
+ * - 'open-friend-modal' : permet d’ouvrir un modal d’info ou d’action sur le membre
+ */
 defineEmits<{
     (e: 'open-friend-modal'): void
 }>()

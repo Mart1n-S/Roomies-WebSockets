@@ -56,13 +56,16 @@ import BaseButton from '@/components/base/BaseButton.vue'
 import type { RoomMember } from '@/models/RoomMember'
 import { useAuthStore } from '@/stores/authStore'
 
+// Props : nom initial du serveur + membres (tableau d’objets RoomMember)
 const props = defineProps<{
     name: string
     members: RoomMember[]
 }>()
 
+// Emission des événements (fermeture ou validation du formulaire)
 const emit = defineEmits(['close', 'submit'])
 
+// Etat local : nom édité, champ de recherche, rôles édités, erreurs de validation
 const editedName = ref(props.name)
 const search = ref('')
 const editedRoles = ref<Record<string, string>>({})
@@ -70,16 +73,18 @@ const errors = ref({
     name: ''
 })
 
+// Récupère le friendCode de l'utilisateur connecté (pour ne pas pouvoir changer son propre rôle)
 const authStore = useAuthStore()
 const myFriendCode = authStore.user?.friendCode || ''
 
-// Validation en temps réel du nom
+// -- VALIDATION DU NOM EN TEMPS RÉEL --
 watch(() => editedName.value, (newName) => {
     if (newName.length >= 3 && newName.length <= 30) {
         errors.value.name = ''
     }
 })
 
+// -- INITIALISATION/MAJ DES ROLES POUR CHAQUE MEMBRE À PARTIR DES PROPS --
 watchEffect(() => {
     editedRoles.value = props.members.reduce((acc, m) => {
         acc[m.member.friendCode] = m.role
@@ -87,6 +92,7 @@ watchEffect(() => {
     }, {} as Record<string, string>)
 })
 
+// -- FILTRAGE DES MEMBRES SELON LA RECHERCHE (hors soi-même) --
 const filteredMembers = computed(() => {
     return props.members
         .filter(m => m.member.friendCode !== myFriendCode &&
@@ -99,12 +105,14 @@ const filteredMembers = computed(() => {
         }))
 })
 
+// Validation générale du formulaire (nom)
 const isFormValid = computed(() => {
     return editedName.value.length >= 3 &&
         editedName.value.length <= 30 &&
         errors.value.name === ''
 })
 
+// Méthode appelée par l’input BaseInput sur validation du nom
 function handleNameValidation(isValid: boolean) {
     if (isValid) {
         errors.value.name = ''
@@ -113,6 +121,7 @@ function handleNameValidation(isValid: boolean) {
     }
 }
 
+// Validation globale lors de la soumission
 function validateForm(): boolean {
     errors.value = { name: '' }
     let isValid = true
@@ -125,13 +134,14 @@ function validateForm(): boolean {
     return isValid
 }
 
+// Emission de l'événement submit avec le nom édité + mapping des rôles modifiés
 function submit() {
     if (!validateForm()) return
 
     emit('submit', {
         name: editedName.value.trim(),
         roles: Object.entries(editedRoles.value)
-            .filter(([friendCode]) => friendCode !== myFriendCode)
+            .filter(([friendCode]) => friendCode !== myFriendCode) // Interdit de changer son propre rôle
             .map(([friendCode, role]) => ({
                 friendCode,
                 role
@@ -139,6 +149,7 @@ function submit() {
     })
 }
 
+// Ferme la modal
 function close() {
     emit('close')
 }

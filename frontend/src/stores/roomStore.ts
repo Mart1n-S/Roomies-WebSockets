@@ -103,6 +103,12 @@ export const useRoomStore = defineStore('room', {
             }
         },
 
+        /**
+         * Ajoute des membres à un groupe via WebSocket.
+         * Envoie un message pour chaque membre à ajouter.
+         * @param roomId ID du salon de groupe
+         * @param friendCodes Liste des codes amis des membres à ajouter
+         */
         async addMembersToRoom(roomId: string, friendCodes: string[]): Promise<void> {
             this.resetError()
             this.loading = true

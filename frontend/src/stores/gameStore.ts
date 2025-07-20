@@ -5,20 +5,31 @@ import type { RoomCard } from '@/models/RoomCard'
 import type { UserPublic } from '@/models/User'
 import type { ChatMessage } from '@/models/Message'
 
+/**
+ * Store Pinia pour la gestion des rooms de jeu, du lobby, des scores et du chat Morpion.
+ * Utilise la Composition API (store setup) pour une logique flexible.
+ */
 export const useGameStore = defineStore('game', () => {
-    // Rooms classiques (liste, lobby)
+    // === ÉTAT DU LOBBY ET DES ROOMS ===
+    // Liste des rooms/lobbies (lobby = salle d'attente multijoueur)
     const rooms = ref<RoomCard[]>([])
+    // Indique si une opération réseau est en cours (chargement des rooms, création…)
     const isLoading = ref(false)
 
-    // Pour la room courante
+    // === ÉTAT DE LA ROOM COURANTE ===
+    // Liste des joueurs dans la room en cours (pour l'affichage des joueurs et leur tour)
     const currentRoomPlayers = ref<UserPublic[]>([])
+    // Identifiant de la room actuellement ouverte/jouée
     const currentRoomId = ref<string | null>(null)
+    // Scores cumulés par joueur (friendCode => nombre de victoires)
     const morpionScores = ref<{ [friendCode: string]: number }>({})
 
-    // Chat par room (réactif)
+    // === CHAT PAR ROOM ===
+    // Messages de chat, classés par roomId (clé dynamique : { roomId: [...messages] })
     const chatMessagesByRoom = ref<Record<string, ChatMessage[]>>({})
 
-    // --- Nouvel état pour le Morpion ---
+    // === ÉTAT DU JEU MORPION ===
+    // État réactif du plateau, joueur courant, gagnant etc.
     const morpionGameState = ref({
         board: Array(9).fill(null) as (string | null)[],
         currentPlayerIndex: 0,
@@ -27,10 +38,15 @@ export const useGameStore = defineStore('game', () => {
         status: 'playing' as 'playing' | 'win' | 'draw'
     })
 
-    // -----
+    // Accès au store WebSocket pour dialoguer en temps réel avec le backend
     const wsStore = useWebSocketStore()
 
-    // --- Gestion lobby
+    // === ACTIONS DU LOBBY (rooms) ===
+
+    /**
+     * Remplace la liste des rooms par une nouvelle (mise à jour du lobby)
+     * Garde le count des spectateurs déjà connus pour éviter le reset de l'affichage.
+     */
     const setRooms = (list: RoomCard[]) => {
         rooms.value = list.map(newRoom => {
             const existingRoom = rooms.value.find(r => r.id === newRoom.id)
@@ -41,7 +57,9 @@ export const useGameStore = defineStore('game', () => {
         })
     }
 
-
+    /**
+     * Ajoute une room au début de la liste (nouvelle partie créée)
+     */
     const addRoom = (room: RoomCard) => {
         rooms.value = [{
             ...room,
@@ -49,34 +67,53 @@ export const useGameStore = defineStore('game', () => {
         }, ...rooms.value]
     }
 
-
+    /**
+     * Demande au backend (WebSocket) la liste des rooms disponibles.
+     */
     const fetchRooms = () => {
         isLoading.value = true
         wsStore.send({ type: 'game_room_list' })
     }
 
+    /**
+     * Crée une nouvelle room de jeu côté backend (WebSocket).
+     */
     const createRoom = (payload: { name: string; game: string }) => {
         isLoading.value = true
         wsStore.send({ type: 'game_room_create', payload })
     }
 
-    // --- Room courante ---
+    // === ACTIONS ROOM COURANTE ===
+
+    /**
+     * Définit les joueurs présents dans la room et l'id courant (à l'entrée dans la partie)
+     */
     const setCurrentRoomPlayers = (players: UserPublic[], roomId: string) => {
         currentRoomPlayers.value = players
         currentRoomId.value = roomId
     }
 
+    /**
+     * Ajoute un joueur dans la room courante s'il n'y est pas déjà.
+     */
     const addPlayerToCurrentRoom = (player: UserPublic) => {
         if (!currentRoomPlayers.value.find(p => p.friendCode === player.friendCode)) {
             currentRoomPlayers.value.push(player)
         }
     }
 
+    /**
+     * Retire un joueur de la room courante (ex : il quitte ou est kick)
+     * Reset aussi l’état du jeu Morpion si besoin.
+     */
     const removePlayerFromCurrentRoom = (friendCode: string) => {
         currentRoomPlayers.value = currentRoomPlayers.value.filter(p => p.friendCode !== friendCode)
         resetMorpionGameState()
     }
 
+    /**
+     * Réinitialise tout l’état lié à la room courante (quand on quitte la partie)
+     */
     const resetCurrentRoom = () => {
         currentRoomId.value = null
         currentRoomPlayers.value = []
@@ -84,6 +121,9 @@ export const useGameStore = defineStore('game', () => {
         resetScores()
     }
 
+    /**
+     * Réinitialise le plateau du morpion (plateau vide, joueur 1, pas de gagnant).
+     */
     const resetMorpionGameState = () => {
         morpionGameState.value = {
             board: Array(9).fill(null),
@@ -94,6 +134,9 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
+    /**
+     * Réinitialise les scores du morpion (et messages de chat de la room courante)
+     */
     const resetScores = () => {
         morpionScores.value = {}
         if (currentRoomId.value) {
@@ -101,6 +144,9 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
+    /**
+     * Envoie un mouvement de morpion au serveur via WebSocket (joueur actuel)
+     */
     const playMorpionMove = (position: number) => {
         if (!currentRoomId.value) return
         wsStore.send({
@@ -110,6 +156,10 @@ export const useGameStore = defineStore('game', () => {
         })
     }
 
+    /**
+     * Met à jour l’état du morpion avec les infos reçues du backend.
+     * Gère la détection du gagnant pour incrémenter le score.
+     */
     const setMorpionGameState = (payload: any) => {
         morpionGameState.value.board = payload.board ?? Array(9).fill(null)
         morpionGameState.value.currentPlayerIndex = payload.currentPlayerIndex ?? 0
@@ -119,12 +169,12 @@ export const useGameStore = defineStore('game', () => {
             payload.winner !== null ? 'win' : (payload.draw ? 'draw' : 'playing')
         )
 
+        // Si un joueur gagne et que ce n'est pas un match nul, on incrémente son score
         if (
             payload.winnerIndex !== undefined &&
             payload.winnerIndex !== null &&
             !payload.draw
         ) {
-            // Récupère le joueur gagnant dans currentRoomPlayers (attention à l’index !)
             const winner = currentRoomPlayers.value[payload.winnerIndex]
             if (winner) {
                 morpionScores.value[winner.friendCode] = (morpionScores.value[winner.friendCode] || 0) + 1
@@ -132,6 +182,9 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
+    /**
+     * Incrémente le nombre de spectateurs pour une room (ex : un viewer arrive)
+     */
     const incrementViewerCount = (roomId: string) => {
         const idx = rooms.value.findIndex(r => r.id === roomId)
         if (idx !== -1) {
@@ -139,7 +192,11 @@ export const useGameStore = defineStore('game', () => {
         }
     }
 
-    // Ajouter un message dans la bonne room
+    // === CHAT PAR ROOM ===
+
+    /**
+     * Ajoute un message de chat dans le tableau associé à la room (créé le tableau si besoin)
+     */
     const addChatMessage = (message: ChatMessage) => {
         const roomId = message.roomId
         if (!chatMessagesByRoom.value[roomId]) {
@@ -148,12 +205,15 @@ export const useGameStore = defineStore('game', () => {
         chatMessagesByRoom.value[roomId].push(message)
     }
 
+    /**
+     * Retire une room du lobby (ex : partie supprimée), nettoie aussi le chat local.
+     */
     const removeRoom = (roomId: string) => {
         rooms.value = rooms.value.filter(r => String(r.id) !== String(roomId))
         delete chatMessagesByRoom.value[roomId]
     }
 
-
+    // Ce qu'on expose à l'extérieur du store (accessible via useGameStore())
     return {
         // Lobby
         rooms, isLoading, setRooms, addRoom, fetchRooms, createRoom, removeRoom,

@@ -15,20 +15,37 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 
+// Valeur contrôlée du textarea (liaison v-model)
 const message = ref('')
+
+// Limite la longueur d'un message (anti-flood/UX)
 const maxLength = 1000
+
+// Indique si un message est en cours d’envoi (désactive le bouton/send)
 const isSending = ref(false)
 
+// Référence au textarea pour l’autoresize
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
+/**
+ * Ajuste dynamiquement la hauteur du textarea selon le contenu.
+ * UX : évite d’avoir un scroll interne gênant pour la saisie de messages longs.
+ */
 const autoResize = () => {
     if (!textareaRef.value) return
-    textareaRef.value.style.height = 'auto' // reset before measuring
+    textareaRef.value.style.height = 'auto' // Reset avant mesure
     textareaRef.value.style.height = textareaRef.value.scrollHeight + 'px'
 }
 
+// Déclare l’événement custom 'send' (payload = string message)
 const emit = defineEmits<{ send: [message: string] }>()
 
+/**
+ * Envoi du message :
+ * - Bloque les doubles clics/envois vides
+ * - Émet l’événement au parent avec le contenu
+ * - Reset le champ et la hauteur
+ */
 const sendMessage = async () => {
     if (!message.value.trim()) return
 
@@ -36,11 +53,12 @@ const sendMessage = async () => {
 
     emit('send', message.value.trim())
 
-    message.value = ''
+    message.value = '' // Réinitialise le champ
 
-    await nextTick() // attendre que le DOM reflète le reset du modèle
+    // Attend que le DOM reflète le reset, puis replie le textarea
+    await nextTick()
     if (textareaRef.value) {
-        textareaRef.value.style.height = 'auto' // replier à la taille d’origine
+        textareaRef.value.style.height = 'auto'
     }
 
     isSending.value = false

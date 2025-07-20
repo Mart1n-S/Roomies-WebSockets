@@ -15,9 +15,15 @@
 import { computed } from 'vue'
 import type { ChatMessage } from '@/models/Message'
 
-// Déstructuration explicite de la prop
+// On attend une prop message de type ChatMessage (structure définie dans les models partagés)
 const { message } = defineProps<{ message: ChatMessage }>()
 
+/**
+ * Formate la date de création du message en une version lisible FR :
+ * - Format : JJ/MM/AAAA - HH:MM
+ * - Utilise l’API Date locale
+ * - Optimisé pour être recalculé uniquement si message.createdAt change
+ */
 const formattedDateTime = computed(() => {
     const date = new Date(message.createdAt)
     return date.toLocaleString('fr-FR', {
@@ -26,6 +32,6 @@ const formattedDateTime = computed(() => {
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-    }).replace(',', ' -')
+    }).replace(',', ' -') // Pour obtenir "JJ/MM/AAAA - HH:MM"
 })
 </script>

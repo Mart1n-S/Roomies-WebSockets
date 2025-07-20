@@ -51,16 +51,26 @@ import EmailInput from '@/components/form/inputs/EmailInput.vue'
 import PasswordInput from '@/components/form/inputs/PasswordInput.vue'
 import BaseButton from '@/components/base/BaseButton.vue'
 
+// Champs contrôlés du formulaire
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
 
+// Stores et services utiles à la gestion de la connexion
 const auth = useAuthStore()
 const toast = useToast()
 const router = useRouter()
 
+// On réinitialise les erreurs à chaque affichage du composant
 auth.resetError()
 
+/**
+ * Gère la soumission du formulaire de connexion :
+ * - Passe en loading pendant la requête
+ * - Appelle le store d’auth avec les credentials
+ * - Redirige vers le dashboard en cas de succès
+ * - Affiche un toast d’erreur sinon
+ */
 async function handleLogin() {
     loading.value = true
 

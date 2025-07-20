@@ -14,6 +14,11 @@
 <script setup lang="ts">
 import type { Room } from '@/models/Room'
 
+/**
+ * Props :
+ * - room : objet Room, représente la room de groupe courante
+ *   (contient au moins : name, members[])
+ */
 defineProps<{
     room: Room
 }>()

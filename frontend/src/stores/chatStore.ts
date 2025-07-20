@@ -178,6 +178,10 @@ export const useChatStore = defineStore('chat', {
             delete this.messagesByRoom[roomId]
         },
 
+        /**
+         * Supprime toutes les données d’une room (messages, pagination, compteurs)
+         * Utilisé lors de la déconnexion ou du changement de room
+         */
         clearRoomData(roomId: string) {
             delete this.messagesByRoom[roomId]
             delete this.currentPage[roomId]
