@@ -24,6 +24,11 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * BaseInput.vue
+ * Composant d'input de base avec support pour v-model, icône cliquable et validation.
+ * Utilisé pour les formulaires dans l'application Roomies.
+ */
 defineOptions({ inheritAttrs: false })
 /**
  * defineProps : permet au composant de recevoir des données

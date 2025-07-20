@@ -2,16 +2,9 @@
 
 namespace App\Controller;
 
-use App\Entity\User;
-use App\Entity\Message;
-use App\Entity\Friendship;
 use App\Security\EmailVerifier;
-use App\Repository\RoomRepository;
 use App\Repository\UserRepository;
 use Symfony\Component\Mime\Address;
-use App\Repository\MessageRepository;
-use App\Repository\RoomUserRepository;
-use App\Repository\FriendshipRepository;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,7 +22,7 @@ class RegistrationController extends AbstractController
     public function __construct(private EmailVerifier $emailVerifier, private UserRepository $userRepository, private UserRegistrationListener $userRegistrationListener, private RateLimiterFactory $rateLimiterFactory,  private readonly string $publicKeyPath, private string $privateKey) {}
 
     /**
-     * puis le frontend decode les paramètres et les envoie à cette route en post
+     * Route pour vérifier l'email d'un utilisateur.
      *
      * @param Request $request
      * @return Response

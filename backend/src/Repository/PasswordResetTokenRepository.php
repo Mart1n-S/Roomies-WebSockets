@@ -50,17 +50,4 @@ class PasswordResetTokenRepository extends ServiceEntityRepository
 
         $this->getEntityManager()->flush(); // Flush une seule fois après toutes les suppressions
     }
-
-    // /**
-    //  * Supprime tous les tokens existants pour un utilisateur donné.
-    //  */
-    // public function deleteOldTokensForUser(User $user): void
-    // {
-    //     $this->createQueryBuilder('t')
-    //         ->delete()
-    //         ->where('t.user = :user')
-    //         ->setParameter('user', $user)
-    //         ->getQuery()
-    //         ->execute();
-    // }
 }

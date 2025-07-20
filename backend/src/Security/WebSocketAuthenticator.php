@@ -1,50 +1,5 @@
 <?php
 
-// namespace App\Security;
-
-// use App\Entity\User;
-// use Firebase\JWT\JWT;
-// use Firebase\JWT\Key;
-// use Psr\Log\LoggerInterface;
-// use App\Repository\UserRepository;
-
-// class WebSocketAuthenticator
-// {
-//     public function __construct(
-//         private readonly UserRepository $userRepository,
-//         private readonly string $publicKeyPath,
-//         private readonly LoggerInterface $logger
-//     ) {}
-
-//     /**
-//      * Authentifie un utilisateur à partir d’un JWT RS256
-//      *
-//      * @param string $token JWT transmis par le client
-//      * @return User|null L'utilisateur authentifié, ou null en cas d’échec
-//      */
-//     public function authenticate(string $token): ?User
-//     {
-//         try {
-//             $publicKey = file_get_contents($this->publicKeyPath);
-//             $decoded = JWT::decode($token, new Key($publicKey, 'RS256'));
-
-//             $userId = $decoded->id ?? null;
-//             if (!$userId) {
-//                 return null;
-//             }
-
-//             return $this->userRepository->find($userId);
-//         } catch (\Throwable $e) {
-//             $this->logger->warning('Échec de l\'authentification WebSocket : ' . $e->getMessage(), [
-//                 'exception' => $e
-//             ]);
-//             return null;
-//         }
-//     }
-// }
-
-
-
 namespace App\Security;
 
 use App\Entity\User;

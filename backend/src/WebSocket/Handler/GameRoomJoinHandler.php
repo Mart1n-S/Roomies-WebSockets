@@ -14,6 +14,12 @@ use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use App\WebSocket\Contract\WebSocketHandlerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
+/**
+ * Handler WebSocket pour la gestion de l’entrée dans une salle de jeu (en tant que joueur ou spectateur).
+ *
+ * Gère la logique d’entrée dans une GameRoom, la notification de tous les participants, 
+ * le démarrage de la partie (pour Morpion), et l’envoi d’état global en temps réel.
+ */
 class GameRoomJoinHandler implements WebSocketHandlerInterface
 {
     public function __construct(
@@ -25,11 +31,17 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
         private readonly SerializerInterface $serializer,
     ) {}
 
+    /**
+     * Prend en charge les messages 'game_room_join' (joueur) et 'game_room_watch' (spectateur).
+     */
     public function supports(string $type): bool
     {
         return in_array($type, ['game_room_join', 'game_room_watch'], true);
     }
 
+    /**
+     * Handler principal : gestion de l’entrée en tant que joueur ou spectateur.
+     */
     public function handle(ConnectionInterface $conn, array $message): void
     {
         try {
@@ -48,12 +60,12 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
             $orderedPlayerIds = $this->gameRoomPlayersRegistry->getPlayerIds($roomId);
 
             if ($type === 'game_room_watch') {
+                // --- Gestion entrée spectateur ---
                 $this->gameRoomPlayersRegistry->addViewer($roomId, $conn);
 
-                // On prépare aussi les infos des joueurs
+                // Préparation des infos joueurs (affichage du front, symboles X/O pour Morpion)
                 $symbolByIndex = ['X', 'O'];
                 $playersArr = [];
-
                 foreach ($orderedPlayerIds as $ix => $playerId) {
                     $player = $this->gameRoomRepository->getEntityManager()
                         ->getRepository(User::class)->find($playerId);
@@ -66,6 +78,7 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                     }
                 }
 
+                // Récupération de l’état de la partie Morpion si existant
                 $gameState = null;
                 $game = $this->morpionGameRegistry->getGame($roomId);
                 if ($game) {
@@ -78,6 +91,7 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                     ];
                 }
 
+                // Réponse personnalisée au spectateur
                 $conn->send(json_encode([
                     'type' => 'game_room_viewing',
                     'roomId' => $roomId,
@@ -86,12 +100,12 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                     'morpion' => $gameState,
                 ]));
 
+                // Mise à jour globale
                 $this->broadcastRoomUpdate($roomId, count($orderedPlayerIds));
                 return;
             }
 
-
-            // Par défaut : rejoindre comme joueur
+            // --- Gestion entrée joueur ---
             $alreadyPlayer = $this->hasUserInPlayers($userId, $orderedPlayerIds);
             if (count($orderedPlayerIds) >= 2 && !$alreadyPlayer) {
                 $conn->send(json_encode([
@@ -101,13 +115,13 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                 return;
             }
 
-            // Ajoute le joueur
+            // Ajoute le joueur à la GameRoomPlayersRegistry
             $this->gameRoomPlayersRegistry->addPlayer($roomId, $userId, $conn);
             $orderedPlayerIds = $this->gameRoomPlayersRegistry->getPlayerIds($roomId);
 
+            // Prépare l’affichage pour le front (index & symbole Morpion)
             $symbolByIndex = ['X', 'O'];
             $playerEntities = [];
-
             foreach ($orderedPlayerIds as $ix => $playerId) {
                 if ($playerId->equals($userId)) {
                     $playerEntities[] = ['entity' => $user, 'index' => $ix, 'symbol' => $symbolByIndex[$ix] ?? null];
@@ -129,13 +143,14 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                 $playersArr[] = $arr;
             }
 
+            // Réponse à l’utilisateur courant
             $conn->send(json_encode([
                 'type' => 'game_room_joined',
                 'roomId' => $roomId,
                 'players' => $playersArr,
             ]));
 
-            // Notifie les autres joueurs de l’arrivée
+            // Notification des autres joueurs
             $myBinId = $userId->toBinary();
             foreach ($this->gameRoomPlayersRegistry->getPlayerConnections($roomId) as $otherUserIdBin => $otherConn) {
                 if ($otherUserIdBin !== $myBinId) {
@@ -153,7 +168,7 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                 }
             }
 
-            // Notifie les spectateurs aussi
+            // Notification des spectateurs
             foreach ($this->gameRoomPlayersRegistry->getViewersForRoom($roomId) as $viewerConn) {
                 $ix = array_search($userId->toRfc4122(), array_map(fn($u) => $u->toRfc4122(), $orderedPlayerIds));
                 $dto = $this->gameRoomMapper->mapUser($user);
@@ -165,14 +180,14 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                     'type' => 'game_room_player_joined',
                     'roomId' => $roomId,
                     'player' => $arr,
-                    'wasViewer' => true, // Pour le front
+                    'wasViewer' => true, // aide le front à différencier le contexte
                 ]));
             }
 
-            // Broadcast état global de la room
+            // Broadcast état global à tous les connectés
             $this->broadcastRoomUpdate($roomId, count($orderedPlayerIds));
 
-            // Démarrage du jeu
+            // Si deux joueurs présents, démarre la partie (création état Morpion)
             if (count($orderedPlayerIds) === 2 && !$this->morpionGameRegistry->hasGame($roomId)) {
                 $this->morpionGameRegistry->createGame($roomId, new MorpionGameState(
                     $orderedPlayerIds[0],
@@ -187,6 +202,9 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
         }
     }
 
+    /**
+     * Diffuse un état global (joueurs, spectateurs, room) à tous les clients connectés.
+     */
     private function broadcastRoomUpdate(int $roomId, int $playersCount): void
     {
         $roomDto = $this->gameRoomMapper->toReadDto(
@@ -210,6 +228,9 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
         }
     }
 
+    /**
+     * Vérifie si l’utilisateur est déjà joueur dans la room.
+     */
     private function hasUserInPlayers(Uuid $userId, array $players): bool
     {
         foreach ($players as $p) {

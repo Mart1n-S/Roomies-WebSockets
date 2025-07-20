@@ -12,6 +12,12 @@ use App\WebSocket\Contract\WebSocketHandlerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+/**
+ * Handler WebSocket pour la gestion des demandes d’amis.
+ *
+ * Prend en charge l’envoi, la validation et la notification d’une demande d’ami en temps réel
+ * pour l’émetteur et le destinataire (si connecté).
+ */
 class FriendshipHandler implements WebSocketHandlerInterface
 {
     public function __construct(
@@ -22,37 +28,55 @@ class FriendshipHandler implements WebSocketHandlerInterface
         private readonly FriendshipMapper $friendshipMapper
     ) {}
 
+    /**
+     * Indique si ce handler prend en charge le type de message reçu.
+     *
+     * @param string $type
+     * @return bool
+     */
     public function supports(string $type): bool
     {
         return $type === 'friend_request';
     }
 
+    /**
+     * Traite l’envoi d’une demande d’ami en temps réel.
+     *
+     * @param ConnectionInterface $conn      Connexion de l’émetteur
+     * @param array $message                 Message reçu (doit contenir 'payload' et 'friendCode')
+     */
     public function handle(ConnectionInterface $conn, array $message): void
     {
         try {
+            // 1. Vérifie l’authentification de l’émetteur
             if (!isset($conn->user) || !$conn->user instanceof UserInterface) {
                 throw new \RuntimeException('Utilisateur non authentifié.');
             }
 
+            // 2. Extraction et validation du payload
             $payload = $message['payload'] ?? null;
             if (!$payload || !isset($payload['friendCode'])) {
                 throw new \InvalidArgumentException('Le champ friendCode est requis.');
             }
 
+            // 3. Construction du DTO utilisé par le processor
             $dto = new FriendshipCreateDTO();
             $dto->friendCode = $payload['friendCode'];
 
+            // 4. Création de la demande d’ami via le processor métier (validation, persistance, etc.)
             $dtoOut = $this->friendshipProcessor->process($dto, $conn->user);
 
+            // 5. Sérialisation pour l’émetteur (retourne la demande créée)
             $jsonData = $this->serializer->serialize($dtoOut, 'json', ['groups' => ['read:friendship']]);
             $decodedData = json_decode($jsonData, true);
 
-            // 1. Envoi à l’émetteur de la demande (moi)
+            // 6. Notification de succès à l’émetteur (lui-même)
             $conn->send(json_encode([
                 'type' => 'friend_request_success',
                 'data' => $decodedData,
             ]));
-            // 2. Envoi au destinataire (si connecté)
+
+            // 7. Notification en temps réel au destinataire (si connecté)
             $recipient = $dtoOut->friend;
             $friendCode = $recipient->friendCode ?? null;
 
@@ -61,8 +85,8 @@ class FriendshipHandler implements WebSocketHandlerInterface
                 $targetConn = $this->connectionRegistry->getConnection($targetUser->getId());
 
                 if ($targetConn) {
+                    // Prépare une version inversée pour le destinataire (émetteur dans le champ 'friend')
                     $dtoForRecipient = clone $dtoOut;
-                    // Transforme l'émetteur en DTO
                     $dtoForRecipient->friend = $this->friendshipMapper->mapUser($conn->user);
 
                     $jsonRecipient = $this->serializer->serialize($dtoForRecipient, 'json', ['groups' => ['read:friendship']]);
@@ -75,6 +99,7 @@ class FriendshipHandler implements WebSocketHandlerInterface
                 }
             }
         } catch (\Throwable $e) {
+            // Gestion globale des erreurs (format, droits, backend...)
             $conn->send(json_encode([
                 'type' => 'friend_request_error',
                 'message' => $e->getMessage(),
