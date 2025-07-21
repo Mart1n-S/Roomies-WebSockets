@@ -6,8 +6,8 @@ import type { UserPublic } from '@/models/User'
 import type { ChatMessage } from '@/models/Message'
 
 /**
- * Store Pinia pour la gestion des rooms de jeu, du lobby, des scores et du chat Morpion.
- * Utilise la Composition API (store setup) pour une logique flexible.
+ * Store Pinia pour la gestion des rooms de jeu, du lobby, des scores et du chat.
+ * Gère plusieurs jeux (Morpion, Puissance 4).
  */
 export const useGameStore = defineStore('game', () => {
     // === ÉTAT DU LOBBY ET DES ROOMS ===
@@ -21,8 +21,10 @@ export const useGameStore = defineStore('game', () => {
     const currentRoomPlayers = ref<UserPublic[]>([])
     // Identifiant de la room actuellement ouverte/jouée
     const currentRoomId = ref<string | null>(null)
-    // Scores cumulés par joueur (friendCode => nombre de victoires)
+
+    // === SCORES (PAR JEU) ===
     const morpionScores = ref<{ [friendCode: string]: number }>({})
+    const puissance4Scores = ref<{ [friendCode: string]: number }>({})
 
     // === CHAT PAR ROOM ===
     // Messages de chat, classés par roomId (clé dynamique : { roomId: [...messages] })
@@ -38,7 +40,16 @@ export const useGameStore = defineStore('game', () => {
         status: 'playing' as 'playing' | 'win' | 'draw'
     })
 
-    // Accès au store WebSocket pour dialoguer en temps réel avec le backend
+    // === ÉTAT DU JEU PUISSANCE 4 ===
+    const puissance4GameState = ref({
+        board: Array(6).fill(null).map(() => Array(7).fill(null)) as (string | null)[][],
+        currentPlayerIndex: 0,
+        winnerIndex: null as number | null,
+        draw: false,
+        status: 'playing' as 'playing' | 'win' | 'draw'
+    })
+
+    // Accès au store WebSocket
     const wsStore = useWebSocketStore()
 
     // === ACTIONS DU LOBBY (rooms) ===
@@ -83,11 +94,7 @@ export const useGameStore = defineStore('game', () => {
         wsStore.send({ type: 'game_room_create', payload })
     }
 
-    // === ACTIONS ROOM COURANTE ===
-
-    /**
-     * Définit les joueurs présents dans la room et l'id courant (à l'entrée dans la partie)
-     */
+    // === ROOM COURANTE ===
     const setCurrentRoomPlayers = (players: UserPublic[], roomId: string) => {
         currentRoomPlayers.value = players
         currentRoomId.value = roomId
@@ -109,6 +116,7 @@ export const useGameStore = defineStore('game', () => {
     const removePlayerFromCurrentRoom = (friendCode: string) => {
         currentRoomPlayers.value = currentRoomPlayers.value.filter(p => p.friendCode !== friendCode)
         resetMorpionGameState()
+        resetPuissance4GameState()
     }
 
     /**
@@ -118,12 +126,12 @@ export const useGameStore = defineStore('game', () => {
         currentRoomId.value = null
         currentRoomPlayers.value = []
         resetMorpionGameState()
+        resetPuissance4GameState()
         resetScores()
+        resetPuissance4Scores()
     }
 
-    /**
-     * Réinitialise le plateau du morpion (plateau vide, joueur 1, pas de gagnant).
-     */
+    // === MORPION ===
     const resetMorpionGameState = () => {
         morpionGameState.value = {
             board: Array(9).fill(null),
@@ -133,20 +141,6 @@ export const useGameStore = defineStore('game', () => {
             status: 'playing'
         }
     }
-
-    /**
-     * Réinitialise les scores du morpion (et messages de chat de la room courante)
-     */
-    const resetScores = () => {
-        morpionScores.value = {}
-        if (currentRoomId.value) {
-            delete chatMessagesByRoom.value[currentRoomId.value]
-        }
-    }
-
-    /**
-     * Envoie un mouvement de morpion au serveur via WebSocket (joueur actuel)
-     */
     const playMorpionMove = (position: number) => {
         if (!currentRoomId.value) return
         wsStore.send({
@@ -181,10 +175,59 @@ export const useGameStore = defineStore('game', () => {
             }
         }
     }
+    const resetScores = () => {
+        morpionScores.value = {}
+        if (currentRoomId.value) {
+            delete chatMessagesByRoom.value[currentRoomId.value]
+        }
+    }
 
-    /**
-     * Incrémente le nombre de spectateurs pour une room (ex : un viewer arrive)
-     */
+    // === PUISSANCE 4 ===
+    const resetPuissance4GameState = () => {
+        puissance4GameState.value = {
+            board: Array(6).fill(null).map(() => Array(7).fill(null)),
+            currentPlayerIndex: 0,
+            winnerIndex: null,
+            draw: false,
+            status: 'playing'
+        }
+    }
+    const playPuissance4Move = (col: number) => {
+        if (!currentRoomId.value) return
+        wsStore.send({
+            type: 'puissance4_play',
+            roomId: currentRoomId.value,
+            col
+        })
+    }
+    const setPuissance4GameState = (payload: any) => {
+        puissance4GameState.value.board = payload.board ?? Array(6).fill(null).map(() => Array(7).fill(null))
+        puissance4GameState.value.currentPlayerIndex = payload.currentPlayerIndex ?? 0
+        puissance4GameState.value.winnerIndex = payload.winnerIndex ?? null
+        puissance4GameState.value.draw = !!payload.draw
+        puissance4GameState.value.status = payload.status || (
+            payload.winner !== null ? 'win' : (payload.draw ? 'draw' : 'playing')
+        )
+
+        if (
+            payload.winnerIndex !== undefined &&
+            payload.winnerIndex !== null &&
+            !payload.draw
+        ) {
+            const winner = currentRoomPlayers.value[payload.winnerIndex]
+            if (winner) {
+                puissance4Scores.value[winner.friendCode] = (puissance4Scores.value[winner.friendCode] || 0) + 1
+            }
+        }
+    }
+    const resetPuissance4Scores = () => {
+        puissance4Scores.value = {}
+        if (currentRoomId.value) {
+            delete chatMessagesByRoom.value[currentRoomId.value]
+        }
+    }
+
+    // === SPECTATEURS ===
     const incrementViewerCount = (roomId: string) => {
         const idx = rooms.value.findIndex(r => r.id === roomId)
         if (idx !== -1) {
@@ -221,6 +264,8 @@ export const useGameStore = defineStore('game', () => {
         currentRoomPlayers, currentRoomId, setCurrentRoomPlayers, addPlayerToCurrentRoom, removePlayerFromCurrentRoom, resetCurrentRoom, incrementViewerCount,
         // Morpion
         morpionGameState, setMorpionGameState, playMorpionMove, morpionScores, resetScores, resetMorpionGameState,
+        // Puissance 4
+        puissance4GameState, setPuissance4GameState, playPuissance4Move, puissance4Scores, resetPuissance4Scores, resetPuissance4GameState,
         // Chat
         chatMessagesByRoom, addChatMessage
     }

@@ -21,6 +21,16 @@
                         <option value="mine">Mes parties</option>
                     </select>
                 </div>
+                <!-- Sélecteur de jeu -->
+                <div class="flex flex-col">
+                    <label for="select-game-type" class="mb-1 text-sm text-gray-300">Jeu</label>
+                    <select id="select-game-type" v-model="gameSelected"
+                        class="h-[42px] px-3 py-2.5 text-sm text-white transition-all duration-200 border rounded-md bg-roomies-gray2 border-roomies-gray3 hover:border-roomies-blue focus:border-roomies-blue focus:ring-1 focus:ring-roomies-blue/30 focus:outline-none">
+                        <option value="">Tous les jeux</option>
+                        <option value="morpion">Morpion</option>
+                        <option value="puissance4">Puissance 4</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Bouton de création -->
@@ -65,7 +75,8 @@ import { useAuthStore } from '@/stores/authStore'
 
 const showModal = ref(false)
 const search = ref('')
-const filter = ref<'all' | 'joinable' | 'empty'>('all')
+const filter = ref<'all' | 'joinable' | 'empty' | 'mine'>('all')
+const gameSelected = ref('')
 
 const gameStore = useGameStore()
 const wsStore = useWebSocketStore()
@@ -75,7 +86,7 @@ onMounted(() => {
     gameStore.fetchRooms()
 })
 
-// Appliquer recherche + filtre
+// Appliquer recherche + filtre + filtre jeu
 const filteredRooms = computed(() => {
     const query = search.value.trim().toLowerCase()
     const myFriendCode = authStore.user?.friendCode
@@ -95,11 +106,13 @@ const filteredRooms = computed(() => {
             matchFilter = !!myFriendCode && room.creator.friendCode === myFriendCode
         }
 
-        return matchName && matchFilter
+        // Nouveau : filtre sur le type de jeu
+        const matchGame = !gameSelected.value || room.game === gameSelected.value
+
+        return matchName && matchFilter && matchGame
     })
 })
 
-// Envoi du join
 function joinRoom(room: any) {
     wsStore.send({
         type: 'game_room_join',

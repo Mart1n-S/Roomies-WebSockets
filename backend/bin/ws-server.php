@@ -16,6 +16,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 use App\WebSocket\Handler\UserStatusHandler;
 use App\State\WebSocket\Group\PrivateRoomReadProvider;
 use App\WebSocket\Connection\GameRoomPlayersRegistry;
+use App\WebSocket\Connection\Puissance4GameRegistry;
 
 use React\Socket\SocketServer;
 use React\Socket\SecureServer;
@@ -58,6 +59,7 @@ $router = $container->get(MessageRouter::class);
 $registry = $container->get(ConnectionRegistry::class);
 $globalChatRegistry = $container->get(GlobalChatRegistry::class);
 $gameRoomPlayersRegistry = $container->get(GameRoomPlayersRegistry::class);
+$puissance4GameRegistry = $container->get(Puissance4GameRegistry::class);
 $groupReadProvider = $container->get(GroupReadProvider::class);
 $privateRoomReadProvider = $container->get(PrivateRoomReadProvider::class);
 $serializer = $container->get(SerializerInterface::class);
@@ -82,6 +84,7 @@ $httpServer = new HttpServer(
             $registry,
             $globalChatRegistry,
             $gameRoomPlayersRegistry,
+            $puissance4GameRegistry,
             $groupReadProvider,
             $privateRoomReadProvider,
             $serializer,

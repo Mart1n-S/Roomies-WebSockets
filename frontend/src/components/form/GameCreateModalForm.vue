@@ -10,13 +10,14 @@
                     <select v-model="form.game" id="selectGame" name="selectGame"
                         class="w-full p-2 text-white rounded bg-roomies-gray2">
                         <option value="morpion">Morpion</option>
+                        <option value="puissance4">Puissance 4</option>
                         <!-- D’autres jeux à venir ici -->
                     </select>
                 </div>
 
                 <!-- Nom de la partie -->
                 <BaseInput name="roomName" label="Nom de la partie" v-model="form.name"
-                    placeholder="Ex : Morpion avec les potes" :error="errors.name" @valid="handleNameValidation"
+                    placeholder="Ex : Partie entre amis" :error="errors.name" @valid="handleNameValidation"
                     autocomplete="off" />
 
                 <!-- Erreur globale -->

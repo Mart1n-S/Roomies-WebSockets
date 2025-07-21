@@ -3,22 +3,22 @@
 namespace App\WebSocket\Handler;
 
 use App\Entity\User;
+use App\Enum\Game;
 use App\Mapper\GameRoomMapper;
 use Symfony\Component\Uid\Uuid;
 use Ratchet\ConnectionInterface;
 use App\Game\Morpion\MorpionGameState;
+use App\Game\Puissance4\Puissance4GameState;
 use App\Repository\GameRoomRepository;
 use App\WebSocket\Connection\ConnectionRegistry;
 use App\WebSocket\Connection\MorpionGameRegistry;
+use App\WebSocket\Connection\Puissance4GameRegistry;
 use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use App\WebSocket\Contract\WebSocketHandlerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
- * Handler WebSocket pour la gestion de l’entrée dans une salle de jeu (en tant que joueur ou spectateur).
- *
- * Gère la logique d’entrée dans une GameRoom, la notification de tous les participants, 
- * le démarrage de la partie (pour Morpion), et l’envoi d’état global en temps réel.
+ * Handler WebSocket pour la gestion de l’entrée dans une salle de jeu (Morpion ou Puissance 4).
  */
 class GameRoomJoinHandler implements WebSocketHandlerInterface
 {
@@ -28,6 +28,7 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
         private readonly ConnectionRegistry $connectionRegistry,
         private readonly GameRoomMapper $gameRoomMapper,
         private readonly MorpionGameRegistry $morpionGameRegistry,
+        private readonly Puissance4GameRegistry $puissance4GameRegistry,
         private readonly SerializerInterface $serializer,
     ) {}
 
@@ -58,13 +59,14 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
 
             $userId = $user->getId();
             $orderedPlayerIds = $this->gameRoomPlayersRegistry->getPlayerIds($roomId);
+            $gameType = $room->getGame()->value;
 
+            // Gestion SPECTATEUR
             if ($type === 'game_room_watch') {
-                // --- Gestion entrée spectateur ---
                 $this->gameRoomPlayersRegistry->addViewer($roomId, $conn);
 
-                // Préparation des infos joueurs (affichage du front, symboles X/O pour Morpion)
-                $symbolByIndex = ['X', 'O'];
+                // Choix symboles par jeu
+                $symbolByIndex = $gameType === Game::Puissance4->value ? ['R', 'Y'] : ['X', 'O'];
                 $playersArr = [];
                 foreach ($orderedPlayerIds as $ix => $playerId) {
                     $player = $this->gameRoomRepository->getEntityManager()
@@ -78,26 +80,38 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                     }
                 }
 
-                // Récupération de l’état de la partie Morpion si existant
+                // Etat du jeu (selon le type)
                 $gameState = null;
-                $game = $this->morpionGameRegistry->getGame($roomId);
-                if ($game) {
-                    $gameState = [
-                        'board' => $game->getBoard(),
-                        'currentPlayerIndex' => $game->getCurrentPlayerIndex(),
-                        'winnerIndex' => $game->getWinnerIndex(),
-                        'draw' => $game->isDraw(),
-                        'status' => $game->getStatus(),
-                    ];
+                if ($gameType === Game::Morpion->value) {
+                    $game = $this->morpionGameRegistry->getGame($roomId);
+                    if ($game) {
+                        $gameState = [
+                            'board' => $game->getBoard(),
+                            'currentPlayerIndex' => $game->getCurrentPlayerIndex(),
+                            'winnerIndex' => $game->getWinnerIndex(),
+                            'draw' => $game->isDraw(),
+                            'status' => $game->getStatus(),
+                        ];
+                    }
+                } elseif ($gameType === Game::Puissance4->value) {
+                    $game = $this->puissance4GameRegistry->getGame($roomId);
+                    if ($game) {
+                        $gameState = [
+                            'board' => $game->getBoard(),
+                            'currentPlayerIndex' => $game->getCurrentPlayerIndex(),
+                            'winnerIndex' => $game->getWinnerIndex(),
+                            'draw' => $game->isDraw(),
+                            'status' => $game->getStatus(),
+                        ];
+                    }
                 }
 
-                // Réponse personnalisée au spectateur
                 $conn->send(json_encode([
                     'type' => 'game_room_viewing',
                     'roomId' => $roomId,
                     'message' => 'Vous observez cette partie.',
                     'players' => $playersArr,
-                    'morpion' => $gameState,
+                    'game' => $gameState,
                 ]));
 
                 // Mise à jour globale
@@ -105,7 +119,7 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                 return;
             }
 
-            // --- Gestion entrée joueur ---
+            // Gestion entrée joueur
             $alreadyPlayer = $this->hasUserInPlayers($userId, $orderedPlayerIds);
             if (count($orderedPlayerIds) >= 2 && !$alreadyPlayer) {
                 $conn->send(json_encode([
@@ -119,38 +133,29 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
             $this->gameRoomPlayersRegistry->addPlayer($roomId, $userId, $conn);
             $orderedPlayerIds = $this->gameRoomPlayersRegistry->getPlayerIds($roomId);
 
-            // Prépare l’affichage pour le front (index & symbole Morpion)
-            $symbolByIndex = ['X', 'O'];
-            $playerEntities = [];
+            $symbolByIndex = $gameType === Game::Puissance4->value ? ['R', 'Y'] : ['X', 'O'];
+            $playersArr = [];
             foreach ($orderedPlayerIds as $ix => $playerId) {
-                if ($playerId->equals($userId)) {
-                    $playerEntities[] = ['entity' => $user, 'index' => $ix, 'symbol' => $symbolByIndex[$ix] ?? null];
-                } else {
-                    $player = $this->gameRoomRepository->getEntityManager()
-                        ->getRepository(User::class)->find($playerId);
-                    if ($player) {
-                        $playerEntities[] = ['entity' => $player, 'index' => $ix, 'symbol' => $symbolByIndex[$ix] ?? null];
-                    }
+                $player = $playerId->equals($userId) ? $user :
+                    $this->gameRoomRepository->getEntityManager()
+                    ->getRepository(User::class)->find($playerId);
+                if ($player) {
+                    $dto = $this->gameRoomMapper->mapUser($player);
+                    $arr = json_decode($this->serializer->serialize($dto, 'json', ['groups' => ['read:user']]), true);
+                    $arr['playerIndex'] = $ix;
+                    $arr['symbol'] = $symbolByIndex[$ix] ?? null;
+                    $playersArr[] = $arr;
                 }
             }
 
-            $playersArr = [];
-            foreach ($playerEntities as $entry) {
-                $dto = $this->gameRoomMapper->mapUser($entry['entity']);
-                $arr = json_decode($this->serializer->serialize($dto, 'json', ['groups' => ['read:user']]), true);
-                $arr['playerIndex'] = $entry['index'];
-                $arr['symbol'] = $entry['symbol'];
-                $playersArr[] = $arr;
-            }
-
-            // Réponse à l’utilisateur courant
+            // Réponse au joueur
             $conn->send(json_encode([
                 'type' => 'game_room_joined',
                 'roomId' => $roomId,
                 'players' => $playersArr,
             ]));
 
-            // Notification des autres joueurs
+            // Notifie les autres joueurs
             $myBinId = $userId->toBinary();
             foreach ($this->gameRoomPlayersRegistry->getPlayerConnections($roomId) as $otherUserIdBin => $otherConn) {
                 if ($otherUserIdBin !== $myBinId) {
@@ -168,7 +173,7 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                 }
             }
 
-            // Notification des spectateurs
+            // Notifie les spectateurs
             foreach ($this->gameRoomPlayersRegistry->getViewersForRoom($roomId) as $viewerConn) {
                 $ix = array_search($userId->toRfc4122(), array_map(fn($u) => $u->toRfc4122(), $orderedPlayerIds));
                 $dto = $this->gameRoomMapper->mapUser($user);
@@ -180,19 +185,26 @@ class GameRoomJoinHandler implements WebSocketHandlerInterface
                     'type' => 'game_room_player_joined',
                     'roomId' => $roomId,
                     'player' => $arr,
-                    'wasViewer' => true, // aide le front à différencier le contexte
+                    'wasViewer' => true,
                 ]));
             }
 
             // Broadcast état global à tous les connectés
             $this->broadcastRoomUpdate($roomId, count($orderedPlayerIds));
 
-            // Si deux joueurs présents, démarre la partie (création état Morpion)
-            if (count($orderedPlayerIds) === 2 && !$this->morpionGameRegistry->hasGame($roomId)) {
-                $this->morpionGameRegistry->createGame($roomId, new MorpionGameState(
-                    $orderedPlayerIds[0],
-                    $orderedPlayerIds[1]
-                ));
+            // Si deux joueurs présents, démarre la partie (création état jeu)
+            if (count($orderedPlayerIds) === 2) {
+                if ($gameType === Game::Morpion->value && !$this->morpionGameRegistry->hasGame($roomId)) {
+                    $this->morpionGameRegistry->createGame($roomId, new MorpionGameState(
+                        $orderedPlayerIds[0],
+                        $orderedPlayerIds[1]
+                    ));
+                } elseif ($gameType === Game::Puissance4->value && !$this->puissance4GameRegistry->hasGame($roomId)) {
+                    $this->puissance4GameRegistry->createGame($roomId, new Puissance4GameState(
+                        $orderedPlayerIds[0],
+                        $orderedPlayerIds[1]
+                    ));
+                }
             }
         } catch (\Throwable $e) {
             $conn->send(json_encode([

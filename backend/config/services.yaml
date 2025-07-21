@@ -92,6 +92,9 @@ services:
     public: true
     autowire: true
 
+  App\WebSocket\Connection\Puissance4GameRegistry:
+    public: true
+    autowire: true
   # App\WebSocket\WebSocketServer:
   #   public: true
   #   autowire: true

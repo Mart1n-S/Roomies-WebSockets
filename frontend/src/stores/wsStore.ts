@@ -22,7 +22,8 @@ export const useWebSocketStore = defineStore('ws', {
         isConnected: false,
         lastMessage: null as any,
         socketInstance: null as WebSocket | null,
-        morpionWaitingRestart: false as boolean
+        morpionWaitingRestart: false as boolean,
+        puissance4WaitingRestart: false as boolean
     }),
 
     actions: {
@@ -424,6 +425,23 @@ export const useWebSocketStore = defineStore('ws', {
                     roomStore.rooms.push(updatedRoom)
                 }
             }
+
+            // ... Dans le handler onmessage :
+            if (data.type === 'puissance4_update') {
+                if (data.status === 'playing') {
+                    this.puissance4WaitingRestart = false
+                }
+                const gameStore = useGameStore()
+                gameStore.setPuissance4GameState(data)
+            }
+            if (data.type === 'puissance4_restart_wait') {
+                this.puissance4WaitingRestart = true
+            }
+            if (data.type === 'puissance4_play_error') {
+                const toast = useToast()
+                toast.error(data.message || 'Coup non valide.')
+            }
+
 
             if (data.type === 'group_deleted') {
                 const roomStore = useRoomStore()

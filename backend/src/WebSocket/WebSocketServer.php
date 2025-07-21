@@ -13,8 +13,7 @@ use App\WebSocket\Connection\GlobalChatRegistry;
 use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use Symfony\Component\Serializer\SerializerInterface;
 use App\State\WebSocket\Group\PrivateRoomReadProvider;
-
-
+use App\WebSocket\Connection\Puissance4GameRegistry;
 
 class WebSocketServer implements MessageComponentInterface
 {
@@ -24,6 +23,7 @@ class WebSocketServer implements MessageComponentInterface
         private readonly ConnectionRegistry $registry,
         private readonly GlobalChatRegistry $globalChatRegistry,
         private readonly GameRoomPlayersRegistry $gameRoomPlayersRegistry,
+        private readonly Puissance4GameRegistry $puissance4GameRegistry,
         private readonly GroupReadProvider $groupReadProvider,
         private readonly PrivateRoomReadProvider $privateRoomReadProvider,
         private readonly SerializerInterface $serializer,

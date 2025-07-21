@@ -4,10 +4,13 @@ namespace App\WebSocket\Handler;
 
 use Ratchet\ConnectionInterface;
 use Symfony\Component\Uid\Uuid;
+use App\Entity\GameRoom;
+use App\Enum\Game;
 use App\Repository\GameRoomRepository;
 use App\WebSocket\Connection\ConnectionRegistry;
 use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use App\WebSocket\Connection\MorpionGameRegistry;
+use App\WebSocket\Connection\Puissance4GameRegistry;
 use App\WebSocket\Contract\WebSocketHandlerInterface;
 use App\Mapper\GameRoomMapper;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -24,6 +27,7 @@ class GameRoomQuitHandler implements WebSocketHandlerInterface
     public function __construct(
         private readonly GameRoomPlayersRegistry $gameRoomPlayersRegistry,
         private readonly MorpionGameRegistry $morpionGameRegistry,
+        private readonly Puissance4GameRegistry $puissance4GameRegistry, // Ajouté
         private readonly ConnectionRegistry $connectionRegistry,
         private readonly GameRoomRepository $gameRoomRepository,
         private readonly GameRoomMapper $gameRoomMapper,
@@ -71,10 +75,20 @@ class GameRoomQuitHandler implements WebSocketHandlerInterface
             // Sinon, c'était un joueur : suppression
             $this->gameRoomPlayersRegistry->removePlayer($roomId, $userId);
 
-            // Si la partie est incomplète (moins de 2 joueurs), reset la partie Morpion éventuelle
+            // Si la partie est incomplète (moins de 2 joueurs), reset la partie du bon jeu
             $players = $this->gameRoomPlayersRegistry->getPlayerIds($roomId);
-            if (count($players) < 2) {
-                $this->morpionGameRegistry->removeGame($roomId);
+
+            // On doit vérifier le type de jeu !
+            $room = $this->gameRoomRepository->find($roomId);
+            if ($room instanceof GameRoom) {
+                $gameType = $room->getGame()->value;
+                if (count($players) < 2) {
+                    if ($gameType === Game::Morpion->value) {
+                        $this->morpionGameRegistry->removeGame($roomId);
+                    } elseif ($gameType === Game::Puissance4->value) {
+                        $this->puissance4GameRegistry->removeGame($roomId);
+                    }
+                }
             }
         }
 

@@ -8,4 +8,5 @@ namespace App\Enum;
 enum Game: string
 {
     case Morpion = 'morpion';
+    case Puissance4 = 'puissance4';
 }

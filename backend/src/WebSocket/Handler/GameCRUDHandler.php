@@ -13,6 +13,7 @@ use App\Dto\GameRoom\CreateGameRoomDTO;
 use App\WebSocket\Connection\ConnectionRegistry;
 use App\WebSocket\Connection\GameRoomPlayersRegistry;
 use App\WebSocket\Connection\MorpionGameRegistry;
+use App\WebSocket\Connection\Puissance4GameRegistry;
 use App\WebSocket\Contract\WebSocketHandlerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -32,7 +33,8 @@ class GameCRUDHandler implements WebSocketHandlerInterface
         private readonly SerializerInterface $serializer,
         private readonly ValidatorInterface $validator,
         private readonly GameRoomPlayersRegistry $gameRoomPlayersRegistry,
-        private readonly MorpionGameRegistry $morpionGameRegistry
+        private readonly MorpionGameRegistry $morpionGameRegistry,
+        private readonly Puissance4GameRegistry $puissance4GameRegistry // <-- Ajouté pour support multi-jeux
     ) {}
 
     /**
@@ -81,8 +83,7 @@ class GameCRUDHandler implements WebSocketHandlerInterface
     }
 
     /**
-     * Création d’une salle de jeu (ex: Morpion, etc.) par l’utilisateur courant.
-     * Valide le DTO, crée la GameRoom en base, puis broadcast à tous les connectés.
+     * Création d’une salle de jeu (Morpion, Puissance4, etc.)
      */
     private function handleCreate(ConnectionInterface $conn, User $user, array $payload): void
     {
@@ -134,8 +135,7 @@ class GameCRUDHandler implements WebSocketHandlerInterface
 
     /**
      * Suppression d’une salle de jeu (uniquement par le créateur, si la salle est vide).
-     * Supprime aussi le state mémoire éventuel (MorpionGameRegistry).
-     * Notifie tous les clients connectés.
+     * Supprime aussi le state mémoire éventuel (pour Morpion, Puissance4...).
      */
     private function handleDelete(ConnectionInterface $conn, User $user, array $payload): void
     {
@@ -169,7 +169,6 @@ class GameCRUDHandler implements WebSocketHandlerInterface
 
         // Vérifie qu’aucun joueur ou spectateur n’est encore présent dans la room
         $roomIdInt = (int)$roomId;
-
         $playerCount = $this->gameRoomPlayersRegistry->getPlayerCount($roomIdInt);
         $viewerCount = $this->gameRoomPlayersRegistry->getViewerCount($roomIdInt);
 
@@ -186,9 +185,13 @@ class GameCRUDHandler implements WebSocketHandlerInterface
         // Suppression effective de la room en base
         $this->gameRoomRepository->remove($room, true);
 
-        // Nettoie la registry mémoire (ex: Morpion)
-        if (property_exists($this, 'morpionGameRegistry') && $this->morpionGameRegistry) {
+        // Nettoie la registry mémoire selon le type de jeu
+        $gameType = $room->getGame()->value;
+        if ($gameType === Game::Morpion->value) {
             $this->morpionGameRegistry->removeGame($roomIdInt);
+        }
+        if ($gameType === Game::Puissance4->value) {
+            $this->puissance4GameRegistry->removeGame($roomIdInt);
         }
 
         // Broadcast à tous les connectés

@@ -1,6 +1,6 @@
 <template>
     <div class="relative flex flex-col items-center gap-2 p-4 shadow bg-roomies-gray3 rounded-xl">
-        <img src="@/assets/images/morpion.svg" alt="Jeu" class="w-40 h-40 rounded-lg" />
+        <img :src="gameImage" alt="Jeu" class="w-40 h-40 rounded-lg" />
 
         <h3 class="text-lg font-bold text-center text-white break-all">{{ room.name }}</h3>
         <p class="text-sm text-blue-400">{{ gameLabel }}</p>
@@ -53,6 +53,9 @@ import { computed, ref } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useWebSocketStore } from '@/stores/wsStore'
 
+import morpionImg from '@/assets/images/morpion.svg'
+import puissance4Img from '@/assets/images/puissance4.svg'
+
 const props = defineProps<{ room: RoomCard }>()
 const emit = defineEmits(['join', 'watch'])
 
@@ -62,7 +65,19 @@ const wsStore = useWebSocketStore()
 const showDeleteModal = ref(false)
 
 const gameLabel = computed(() =>
-    props.room.game === 'morpion' ? 'Morpion' : props.room.game
+    props.room.game === 'morpion'
+        ? 'Morpion'
+        : props.room.game === 'puissance4'
+            ? 'Puissance 4'
+            : props.room.game
+)
+
+const gameImage = computed(() =>
+    props.room.game === 'morpion'
+        ? morpionImg
+        : props.room.game === 'puissance4'
+            ? puissance4Img
+            : morpionImg // fallback
 )
 
 const isOwner = computed(() =>
