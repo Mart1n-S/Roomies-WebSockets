@@ -104,6 +104,13 @@ mkdir -p certs
 openssl req -x509 -newkey rsa:4096 -nodes -keyout certs/key.pem -out certs/cert.pem -days 365 -subj "/CN=localhost"
 ```
 
+#### Générer les clefs VAPID pour les notifications push
+```bash
+web-push generate-vapid-keys
+```
+Placer les clés générées dans le fichier `.env.local` 
+
+Et ajouter la clef publique dans le fichier `.env` du frontend 
 ### 3. Initialiser le Frontend Vue.js
 
 ```bash
