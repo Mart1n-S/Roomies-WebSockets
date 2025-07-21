@@ -118,16 +118,6 @@ cd ../frontend
 npm install
 ```
 
-#### Générer un certificat TLS auto-signé pour le frontend (dev, https local)
-
-- **Commande standard pour générer les certs** :
-  
-  ⚠️ Normalement, les certificats sont déjà fournis dans le projet, mais pour les régénérer :
-  ```bash
-  openssl req -x509 -newkey rsa:2048 -nodes -keyout certs/localhost-key.pem -out certs/localhost-cert.pem -days 365 -subj "/CN=localhost"
-  ```
-- Si tu as déjà les fichiers fournis (`localhost-key.pem`, `localhost-cert.pem`), tu peux les utiliser tels quels.
-
 ### 4. Générer les certificats pour Nginx (si besoin)
 
 - Si tu veux régénérer les certificats pour le proxy Nginx :
@@ -141,7 +131,7 @@ npm install
   ```
 
 > **Note** : Par défaut, les certificats fournis permettent d’utiliser le HTTPS local (auto-signé).  
-> ⚠️⚠️ Le navigateur peut lever une exception de sécurité (normal en local) il faut l’accepter pour continuer. Pour cela il faut se rendre sur https://localhost/ et accepter le certificat auto-signé idem pour https://localhost:5173/.
+> ⚠️⚠️ Le navigateur peut lever une exception de sécurité (normal en local) il faut l’accepter pour continuer. Pour cela il faut se rendre sur https://localhost/ et accepter le certificat auto-signé idem pour http://localhost:5173/.
 
 ### 5. Lancer l’ensemble de l’application
 
@@ -179,7 +169,7 @@ php bin/console d:f:l
 
 
 ## C’est tout ! 🎉  
-- L’application sera accessible sur [https://localhost:5173/](https://localhost:5173/) (frontend) 
+- L’application sera accessible sur [http://localhost:5173/](http://localhost:5173/) (frontend) 
 😶‍🌫️ Voici des identifiants de test :
   - **Email** : `user@user.com`
   - **Mot de passe** : `password` 
