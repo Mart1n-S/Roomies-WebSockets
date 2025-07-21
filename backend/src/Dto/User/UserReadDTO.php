@@ -20,4 +20,7 @@ final class UserReadDTO
 
     #[Groups(['read:me', 'read:user', 'read:friendship', 'read:group', 'read:message', 'read:friendshipWithRoom', 'read:game_room'])]
     public ?string $friendCode = null;
+
+    #[Groups(['read:me'])]
+    public ?bool $pushNotificationsEnabled = null;
 }

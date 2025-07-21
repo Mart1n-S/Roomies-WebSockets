@@ -4,6 +4,7 @@ export interface User {
     pseudo: string
     friendCode: string
     avatar: string
+    pushNotificationsEnabled?: boolean
 }
 
 export interface UserPublic {

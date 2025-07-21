@@ -2,9 +2,11 @@
 
 namespace App\WebSocket\Handler;
 
+use App\Entity\User;
 use App\Mapper\FriendshipMapper;
 use Ratchet\ConnectionInterface;
 use App\Repository\UserRepository;
+use App\Service\PushNotificationService;
 use App\Dto\Friendship\FriendshipCreateDTO;
 use App\WebSocket\Connection\ConnectionRegistry;
 use App\State\Friendship\FriendshipCreateProcessor;
@@ -16,7 +18,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
  * Handler WebSocket pour la gestion des demandes d’amis.
  *
  * Prend en charge l’envoi, la validation et la notification d’une demande d’ami en temps réel
- * pour l’émetteur et le destinataire (si connecté).
+ * pour l’émetteur et le destinataire (si connecté), et envoie une notification push si activé.
  */
 class FriendshipHandler implements WebSocketHandlerInterface
 {
@@ -25,7 +27,8 @@ class FriendshipHandler implements WebSocketHandlerInterface
         private readonly SerializerInterface $serializer,
         private readonly ConnectionRegistry $connectionRegistry,
         private readonly UserRepository $userRepository,
-        private readonly FriendshipMapper $friendshipMapper
+        private readonly FriendshipMapper $friendshipMapper,
+        private readonly PushNotificationService $pushNotificationService // <-- Ajout ici
     ) {}
 
     /**
@@ -40,7 +43,7 @@ class FriendshipHandler implements WebSocketHandlerInterface
     }
 
     /**
-     * Traite l’envoi d’une demande d’ami en temps réel.
+     * Traite l’envoi d’une demande d’ami en temps réel + notification push.
      *
      * @param ConnectionInterface $conn      Connexion de l’émetteur
      * @param array $message                 Message reçu (doit contenir 'payload' et 'friendCode')
@@ -97,6 +100,33 @@ class FriendshipHandler implements WebSocketHandlerInterface
                         'data' => $decodedRecipient,
                     ]));
                 }
+            }
+
+            // 8. ENVOI D'UNE NOTIFICATION PUSH AU DESTINATAIRE SI ACTIVÉ
+            // On recherche l'utilisateur destinataire via le UserRepository (toujours fiable)
+            $recipientUser = $this->userRepository->findOneBy(['friendCode' => $friendCode]);
+            if (
+                $recipientUser &&
+                $recipientUser->isPushNotificationsEnabled() &&
+                $recipientUser->getPushEndpoint() &&
+                $recipientUser->getPushP256dh() &&
+                $recipientUser->getPushAuth()
+            ) {
+                /** @var User $applicant */
+                $payload = [
+                    'title' => 'Nouvelle demande d\'ami',
+                    'body'  => 'Quelqu’un souhaite devenir votre ami !',
+                    'icon'  => '/roomies-icon-192.png',
+                    'badge' => '/roomies-icon-192.png',
+                    'url'   => '/dashboard',
+                ];
+
+                $this->pushNotificationService->sendNotification(
+                    $recipientUser->getPushEndpoint(),
+                    $recipientUser->getPushP256dh(),
+                    $recipientUser->getPushAuth(),
+                    $payload
+                );
             }
         } catch (\Throwable $e) {
             // Gestion globale des erreurs (format, droits, backend...)

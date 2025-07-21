@@ -1,7 +1,7 @@
 describe('Envoyer un message à ami_fixe_1 en privé', () => {
     it('Se connecte, ouvre le chat privé et envoie un message, puis logout, puis login en tant que ami_fixe_1 et vérifie la réception', () => {
         // 1. Accès à la page d’accueil publique
-        cy.visit('https://localhost:5173/')
+        cy.visit('http://localhost:5173/')
         cy.contains('Roomies', { timeout: 8000 }).should('be.visible')
         cy.contains('Connexion', { timeout: 8000 }).should('be.visible')
 

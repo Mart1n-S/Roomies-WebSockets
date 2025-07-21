@@ -91,6 +91,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: GameRoom::class, mappedBy: 'creator')]
     private Collection $gameRooms;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $pushNotificationsEnabled = false;
+
+    #[ORM\Column(type: 'string', length: 500, nullable: true)]
+    private ?string $pushEndpoint = null;
+
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $pushP256dh = null;
+
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $pushAuth = null;
+
+
     public function __construct()
     {
         $this->friendRequestsSent = new ArrayCollection();
@@ -329,6 +342,51 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
 
+        return $this;
+    }
+
+    public function isPushNotificationsEnabled(): bool
+    {
+        return $this->pushNotificationsEnabled;
+    }
+
+    public function setPushNotificationsEnabled(bool $enabled): static
+    {
+        $this->pushNotificationsEnabled = $enabled;
+
+        return $this;
+    }
+
+    public function getPushEndpoint(): ?string
+    {
+        return $this->pushEndpoint;
+    }
+
+    public function setPushEndpoint(?string $pushEndpoint): static
+    {
+        $this->pushEndpoint = $pushEndpoint;
+        return $this;
+    }
+
+    public function getPushP256dh(): ?string
+    {
+        return $this->pushP256dh;
+    }
+
+    public function setPushP256dh(?string $pushP256dh): static
+    {
+        $this->pushP256dh = $pushP256dh;
+        return $this;
+    }
+
+    public function getPushAuth(): ?string
+    {
+        return $this->pushAuth;
+    }
+
+    public function setPushAuth(?string $pushAuth): static
+    {
+        $this->pushAuth = $pushAuth;
         return $this;
     }
 }

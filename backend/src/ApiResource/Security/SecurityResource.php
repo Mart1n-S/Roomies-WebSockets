@@ -3,12 +3,15 @@
 namespace App\ApiResource\Security;
 
 use ApiPlatform\Metadata\Get;
+use App\Dto\User\UserReadDTO;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\OpenApi\Model;
 use ApiPlatform\Metadata\ApiResource;
+use App\Dto\User\PushSubscriptionDTO;
 use App\Controller\SecurityController;
 use App\Dto\Websocket\WebSocketTokenRead;
 use App\Controller\RegistrationController;
+use App\State\User\UserPatchNotificationProcessor;
 use App\State\WebSocket\Security\WebSocketTokenProvider;
 
 
@@ -376,6 +379,20 @@ use App\State\WebSocket\Security\WebSocketTokenProvider;
                 ]
             )
         ),
+        new Post(
+            uriTemplate: '/subscribe',
+            name: 'subscribe_notifications',
+            security: "is_granted('IS_AUTHENTICATED_FULLY')",
+            input: PushSubscriptionDTO::class,
+            output: UserReadDTO::class,
+            processor: UserPatchNotificationProcessor::class,
+            openapi: new Model\Operation(
+                summary: "S'abonner aux notifications",
+                description: "Permet à l'utilisateur de s'abonner aux notifications push.",
+                tags: ['Security']
+            )
+        ),
+
 
     ]
 )]

@@ -33,7 +33,7 @@ class RegistrationController extends AbstractController
         // Vérification si l'ID est présent dans les paramètres de la requête
         $userId = $request->query->get('id');
         if (!$userId) {
-            return new RedirectResponse('https://localhost:5173/verified-email?status=error&message=missing_id');
+            return new RedirectResponse('http://localhost:5173/verified-email?status=error&message=missing_id');
         }
 
         try {
@@ -41,16 +41,16 @@ class RegistrationController extends AbstractController
             $user = $this->userRepository->findOneBy(['id' => $userId, 'isVerified' => false]);
 
             if (!$user) {
-                return new RedirectResponse('https://localhost:5173/verified-email?status=error&message=user_not_found_or_already_verified');
+                return new RedirectResponse('http://localhost:5173/verified-email?status=error&message=user_not_found_or_already_verified');
             }
 
             // Valider et confirmer l'email
             $this->emailVerifier->handleEmailConfirmation($request, $user);
 
-            return new RedirectResponse('https://localhost:5173/verified-email?status=success');
+            return new RedirectResponse('http://localhost:5173/verified-email?status=success');
         } catch (VerifyEmailExceptionInterface $exception) {
             // Gestion des erreurs liées à la vérification de l'email
-            return new RedirectResponse('https://localhost:5173/verified-email?status=error&code=expired_link');
+            return new RedirectResponse('http://localhost:5173/verified-email?status=error&code=expired_link');
         }
     }
 

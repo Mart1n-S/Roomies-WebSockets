@@ -29,6 +29,7 @@ class UserMapper
         $dto->pseudo = $user->getPseudo();
         $dto->roles = $user->getRoles();
         $dto->friendCode = $user->getFriendCode();
+        $dto->pushNotificationsEnabled = $user->isPushNotificationsEnabled();
 
         $dto->avatar = $this->avatarUrlGenerator->generate($user);
 

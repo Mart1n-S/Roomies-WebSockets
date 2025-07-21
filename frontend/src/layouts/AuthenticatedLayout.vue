@@ -22,6 +22,9 @@ import LoadingScreen from '@/components/UI/LoadingScreen.vue'
 import CreateGroupModalForm from '@/components/form/CreateGroupModalForm.vue'
 import ContextPanel from '@/components/layout/ContextPanel.vue'
 
+// Importe le service push
+import { askPermission, subscribeUserToPush, sendSubscriptionToBackEnd } from '@/services/pushService'
+
 const auth = useAuthStore()
 const friendshipStore = useFriendshipStore()
 const contextPanel = useContextPanelStore()
@@ -29,17 +32,37 @@ const route = useRoute()
 
 const showLoader = ref(true)
 const showCreateModal = ref(false)
-
+const alreadyCheckedPush = ref(false)
 
 watch(
     () => auth.user,
     async (user) => {
-        if (user) {
-            await friendshipStore.initFriendshipStore()
+        // Stop si pas d'user OU si déjà traité dans cette session
+        if (!user || alreadyCheckedPush.value) return;
+
+        await friendshipStore.initFriendshipStore();
+
+        if (user.pushNotificationsEnabled === undefined || user.pushNotificationsEnabled === false) {
+            try {
+                const permission = await askPermission();
+                if (permission === 'granted') {
+                    const sub = await subscribeUserToPush();
+                    const updatedUser = await sendSubscriptionToBackEnd(sub, true);
+                    auth.user = updatedUser;
+                } else {
+                    const updatedUser = await sendSubscriptionToBackEnd(null, false);
+                    auth.user = updatedUser;
+                }
+            } catch (e) {
+                console.log('Notification push refusée ou erreur', e);
+                const updatedUser = await sendSubscriptionToBackEnd(null, false);
+                auth.user = updatedUser;
+            }
         }
+        alreadyCheckedPush.value = true; // Ne traite plus dans cette session
     },
     { immediate: true }
-)
+);
 
 watch(
     () => auth.appReady,

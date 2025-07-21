@@ -20,7 +20,8 @@ describe('BaseButton', () => {
   /** Vérifie que la classe CSS correspondant à la variante est appliquée */
   it('applique la bonne classe de variante', () => {
     const wrapper = mount(BaseButton, { props: { variant: 'success' } })
-    expect(wrapper.classes().join(' ')).toContain('bg-green-500')
+    const btn = wrapper.find('button')
+    expect(btn.classes().join(' ')).toContain('bg-green-500')
   })
 
   /** Vérifie que le bouton est désactivé quand loading ou disabled est à true */

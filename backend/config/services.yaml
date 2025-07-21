@@ -74,6 +74,12 @@ services:
       $avatarPublicPath: "%app.user_avatar_public_path%"
       $baseUrl: "%app.base_url%"
 
+  App\Service\PushNotificationService:
+    arguments:
+      $vapidPublicKey: "%env(VAPID_PUBLIC_KEY)%"
+      $vapidPrivateKey: "%env(VAPID_PRIVATE_KEY)%"
+      $vapidSubject: "%env(VAPID_SUBJECT)%"
+
   App\WebSocket\Connection\ConnectionRegistry:
     public: true
     autowire: true
